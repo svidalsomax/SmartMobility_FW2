@@ -394,6 +394,8 @@ uint8_t initial_check(void )
 
 /* main */
 
+//CAMBIO PARA PROBAR SUBIDA A GIT.
+
 int main(void)
 {
 	/* Initializes MCU, drivers and middleware */
