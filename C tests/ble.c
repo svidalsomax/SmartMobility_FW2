@@ -9,7 +9,8 @@ void ble_process(Ble *ble){
 		{
 			//definir buffer AT
 			strcpy(buffer, "BLE_BEGIN");
-            printf(buffer);
+			//strcpy(ble->state_, "BLE_begin");
+            //printf(buffer);
             ble_retry(BLE_RENEW, ble, buffer); 
 			break;	
 		}
@@ -17,7 +18,8 @@ void ble_process(Ble *ble){
 		{
 			//definir algo para ver el estado del state
 			strcpy(buffer, "AT_RENEW");
-            printf(buffer);
+			//strcpy(ble->state_, "BLE_RENEW");
+            //printf(buffer);
             ble_retry(BLE_BEGIN, ble, buffer);
 			break; 
 		}		
@@ -31,6 +33,6 @@ void ble_process(Ble *ble){
 
 void ble_retry(bleStatus state, Ble *ble, char *buffer){
 	(*ble).bleState_ = state; 
-    //strcpy((*ble).state_, buffer);
+    strcpy((*ble).state_, buffer);
     //command para enviar comando por uart
 }

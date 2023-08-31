@@ -8,7 +8,7 @@
 #include "fram_driver.h"
 #include "spi_can_driver.h"
 
-#define USB_DEBUG 0		// Activa el debug por serial USB
+#define USB_DEBUG 1		// Activa el debug por serial USB
 #define USB_COMMS_LENGTH 64	// Largo de comandos serial USB
 
 void MCU_low_power_mode(void );
@@ -396,6 +396,8 @@ uint8_t initial_check(void )
 
 //CAMBIO PARA PROBAR SUBIDA A GIT.
 
+Ble ble = {0};
+
 int main(void)
 {
 	/* Initializes MCU, drivers and middleware */
@@ -457,7 +459,7 @@ int main(void)
 	gpio_set_pin_level(LED2, false);
 	delay_ms(333);
 	
-	
+	//strcpy(ble.state_,"bleState");
 	while (1) {
 		if (errorcnt == 0)
 		{ 
@@ -465,6 +467,8 @@ int main(void)
 			gpio_set_pin_level(LED1, false);
 			gpio_set_pin_level(LED2, false);
 			usb_read_routine();
+			ble_process(&ble);
+			usb_serial_write(ble.state_, strlen(ble.state_));
 			delay_ms(3000);
 		}
 		else
