@@ -1,4 +1,4 @@
-/*
+/* 
  * ble_driver.h
  *
  *  Author: MWF
@@ -58,5 +58,6 @@ void ble_send_and_receive(char* command, char* response);
 ******************************************************************************/
 void ble_process(Ble *ble);
 void ble_retry(bleStatus state, Ble *ble, char *buffer);
+void ble_set_timer(unsigned long t, Ble *ble);
 
 #endif /* BLE_DRIVER_H_ */

@@ -68,7 +68,7 @@ void ble_process(Ble *ble){
 		case BLE_BEGIN:
 		{
 			//definir buffer AT
-			strcpy(buffer, "BLE_BEGIN");
+			strcpy(buffer, "AT");
 			//printf(buffer);
 			ble_retry(BLE_RENEW, ble, buffer);
 			break;
@@ -76,7 +76,7 @@ void ble_process(Ble *ble){
 		case BLE_RENEW:
 		{
 			//definir algo para ver el estado del state
-			strcpy(buffer, "AT_RENEW");
+			strcpy(buffer, "AT");
 			//printf(buffer);
 			ble_retry(BLE_BEGIN, ble, buffer);
 			break;
@@ -91,6 +91,11 @@ void ble_process(Ble *ble){
 
 void ble_retry(bleStatus state, Ble *ble, char *buffer){
 	(*ble).bleState_ = state;
-	strcpy((*ble).state_, buffer);
+	ble_send_and_receive(buffer,);
 	//command para enviar comando por uart
+}
+
+void ble_set_timer(unsigned long t, Ble *ble){
+	(*ble).timer_ = t;
+	//(*ble).time =  ;
 }

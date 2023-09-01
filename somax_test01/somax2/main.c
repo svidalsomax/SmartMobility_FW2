@@ -507,6 +507,6 @@ int main(void)
 			delay_ms(700);
 			}
 		}
-		MCU_low_power_mode();
+		//MCU_low_power_mode();
 	}
 }
