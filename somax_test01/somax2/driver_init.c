@@ -12,19 +12,18 @@
 #include <hal_init.h>
 
 #include <hpl_adc_base.h>
-#include <hpl_rtc_base.h>
 
 /*! The buffer size for USART */
-#define USART_0_BUFFER_SIZE 64
+#define USART_0_BUFFER_SIZE 16
 
 /*! The buffer size for USART */
-#define USART_1_BUFFER_SIZE 64
+#define USART_1_BUFFER_SIZE 16
 
 struct crc_sync_descriptor    CRC_0;
-struct timer_descriptor       TIMER_0;
 struct usart_async_descriptor USART_0;
 struct usart_async_descriptor USART_1;
 struct spi_m_sync_descriptor  SPI_0;
+struct timer_descriptor       TIMER_0;
 struct can_async_descriptor   CAN_0;
 
 static uint8_t USART_0_buffer[USART_0_BUFFER_SIZE];
@@ -33,6 +32,8 @@ static uint8_t USART_1_buffer[USART_1_BUFFER_SIZE];
 struct adc_sync_descriptor ADC_0;
 
 struct flash_descriptor FLASH_0;
+
+struct calendar_descriptor CALENDAR_0;
 
 struct i2c_m_sync_desc I2C_0;
 
@@ -125,15 +126,15 @@ void FLASH_0_init(void)
 	flash_init(&FLASH_0, NVMCTRL);
 }
 
-/**
- * \brief Timer initialization function
- *
- * Enables Timer peripheral, clocks and initializes Timer driver
- */
-static void TIMER_0_init(void)
+void CALENDAR_0_CLOCK_init(void)
 {
 	hri_mclk_set_APBAMASK_RTC_bit(MCLK);
-	timer_init(&TIMER_0, RTC, _rtc_get_timer());
+}
+
+void CALENDAR_0_init(void)
+{
+	CALENDAR_0_CLOCK_init();
+	calendar_init(&CALENDAR_0, RTC);
 }
 
 /**
@@ -312,6 +313,19 @@ void SPI_0_init(void)
 void delay_driver_init(void)
 {
 	delay_init(SysTick);
+}
+
+/**
+ * \brief Timer initialization function
+ *
+ * Enables Timer peripheral, clocks and initializes Timer driver
+ */
+static void TIMER_0_init(void)
+{
+	hri_mclk_set_APBAMASK_TC0_bit(MCLK);
+	hri_gclk_write_PCHCTRL_reg(GCLK, TC0_GCLK_ID, CONF_GCLK_TC0_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
+
+	timer_init(&TIMER_0, TC0, _tc_get_timer());
 }
 
 void USB_0_PORT_init(void)
@@ -634,7 +648,7 @@ void system_init(void)
 
 	FLASH_0_init();
 
-	TIMER_0_init();
+	CALENDAR_0_init();
 	USART_0_init();
 	USART_1_init();
 
@@ -644,6 +658,7 @@ void system_init(void)
 
 	delay_driver_init();
 
+	TIMER_0_init();
 	USB_0_init();
 	CAN_0_init();
 }

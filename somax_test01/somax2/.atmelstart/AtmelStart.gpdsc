@@ -43,6 +43,7 @@
       <RTE_Components_h>#define ATMEL_START</RTE_Components_h>
       <files>
         <file category="doc" condition="ARMCC, GCC, IAR" name="hal/documentation/adc_sync.rst"/>
+        <file category="doc" condition="ARMCC, GCC, IAR" name="hal/documentation/calendar.rst"/>
         <file category="doc" condition="ARMCC, GCC, IAR" name="hal/documentation/can_async.rst"/>
         <file category="doc" condition="ARMCC, GCC, IAR" name="hal/documentation/crc_sync.rst"/>
         <file category="doc" condition="ARMCC, GCC, IAR" name="hal/documentation/ext_irq.rst"/>
@@ -54,6 +55,7 @@
         <file category="doc" condition="ARMCC, GCC, IAR" name="hal/documentation/usb_device_async.rst"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hal_atomic.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hal_cache.h"/>
+        <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hal_calendar.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hal_can_async.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hal_crc_sync.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hal_delay.h"/>
@@ -193,6 +195,7 @@
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_adc_sync.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_calendar.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_missing_features.h"/>
+        <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_pwm.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_reset.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_spi_m_async.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_spi_m_dma.h"/>
@@ -203,6 +206,7 @@
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_usart_async.h"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="hal/include/hpl_usart_sync.h"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="hal/src/hal_adc_sync.c"/>
+        <file category="source" condition="ARMCC, GCC, IAR" name="hal/src/hal_calendar.c"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="hal/src/hal_ext_irq.c"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="hal/src/hal_spi_m_sync.c"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="hal/src/hal_timer.c"/>
@@ -234,6 +238,8 @@
         <file category="header" condition="ARMCC, GCC, IAR" name="hpl/rtc/hpl_rtc_base.h"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="hpl/sercom/hpl_sercom.c"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="hpl/systick/hpl_systick.c"/>
+        <file category="source" condition="ARMCC, GCC, IAR" name="hpl/tc/hpl_tc.c"/>
+        <file category="header" condition="ARMCC, GCC, IAR" name="hpl/tc/hpl_tc_base.h"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="hpl/usb/hpl_usb.c"/>
         <file category="source" condition="ARMCC, GCC, IAR" name="usb_start.c"/>
         <file category="header" condition="ARMCC, GCC, IAR" name="usb_start.h"/>
@@ -253,6 +259,7 @@
         <file attr="config" category="header" condition="ARMCC, GCC, IAR" name="config/hpl_rtc_config.h"/>
         <file attr="config" category="header" condition="ARMCC, GCC, IAR" name="config/hpl_sercom_config.h"/>
         <file attr="config" category="header" condition="ARMCC, GCC, IAR" name="config/hpl_systick_config.h"/>
+        <file attr="config" category="header" condition="ARMCC, GCC, IAR" name="config/hpl_tc_config.h"/>
         <file attr="config" category="header" condition="ARMCC, GCC, IAR" name="config/hpl_usb_config.h"/>
         <file attr="config" category="header" condition="ARMCC, GCC, IAR" name="config/peripheral_clk_config.h"/>
         <file attr="config" category="header" condition="ARMCC, GCC, IAR" name="config/usbd_config.h"/>
@@ -280,6 +287,7 @@
         <file category="include" condition="ARMCC, GCC, IAR" name="hpl/rtc"/>
         <file category="include" condition="ARMCC, GCC, IAR" name="hpl/sercom"/>
         <file category="include" condition="ARMCC, GCC, IAR" name="hpl/systick"/>
+        <file category="include" condition="ARMCC, GCC, IAR" name="hpl/tc"/>
         <file category="include" condition="ARMCC, GCC, IAR" name="hpl/usb"/>
         <file category="include" condition="ARMCC, GCC, IAR" name="hri"/>
         <file category="include" condition="ARMCC, GCC, IAR" name=""/>

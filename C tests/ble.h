@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define MAX_MESSAGE_LENGTH 64
 
@@ -26,7 +27,7 @@ typedef struct {
 //ble_Scan - used for ...
 typedef struct{
 	unsigned long scanTime_; 
-	Beacon beaconVector[100];
+	Beacon *beaconVector;
 }ble_Scan; 
 
 //BLE Struct - Struct for everything
@@ -51,7 +52,7 @@ typedef struct{
 	unsigned long timer_;
 	unsigned long time_;
 	int tryCounter_;
-	char state_[64];
+	char state_;
 	bool role_ ;
 	int scanTime_;
 	ble_Scan scan_;
@@ -62,10 +63,12 @@ typedef struct{
 
 void ble_process(Ble *ble);
 void ble_set_timer(unsigned long t, Ble *ble);
-ble_Scan ble_getSecan(Ble *ble);
+ble_Scan ble_getScan(Ble *ble);
+void clean_ble_Scan(ble_Scan* scan);
 void ble_setName(char *name);
 bool ble_setBaud(unsigned long baud);
 bool ble_sleepMode(Ble *ble);
 bool wakeUp(Ble *ble);
 bool ble_timer(Ble *ble);
 void ble_retry(bleStatus state, Ble *ble, char *buffer);
+void resizeBeaconVector(ble_Scan *scan, size_t newSize);

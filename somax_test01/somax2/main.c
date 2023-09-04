@@ -468,7 +468,7 @@ int main(void)
 			gpio_set_pin_level(LED2, false);
 			usb_read_routine();
 			ble_process(&ble);
-			usb_serial_write(ble.state_, strlen(ble.state_));
+			usb_serial_write(ble.response_, strlen(ble.response_));
 			delay_ms(3000);
 		}
 		else
@@ -507,6 +507,6 @@ int main(void)
 			delay_ms(700);
 			}
 		}
-		//MCU_low_power_mode();
+		MCU_low_power_mode();
 	}
 }

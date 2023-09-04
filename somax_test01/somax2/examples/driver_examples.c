@@ -115,30 +115,39 @@ void FLASH_0_example(void)
 	flash_read(&FLASH_0, 0x3200, chk_data, page_size);
 }
 
-static struct timer_task TIMER_0_task1, TIMER_0_task2;
 /**
- * Example of using TIMER_0.
+ * Example of using CALENDAR_0.
  */
-static void TIMER_0_task1_cb(const struct timer_task *const timer_task)
+static struct calendar_alarm alarm;
+
+static void alarm_cb(struct calendar_descriptor *const descr)
 {
+	/* alarm expired */
 }
 
-static void TIMER_0_task2_cb(const struct timer_task *const timer_task)
+void CALENDAR_0_example(void)
 {
-}
+	struct calendar_date date;
+	struct calendar_time time;
 
-void TIMER_0_example(void)
-{
-	TIMER_0_task1.interval = 100;
-	TIMER_0_task1.cb       = TIMER_0_task1_cb;
-	TIMER_0_task1.mode     = TIMER_TASK_REPEAT;
-	TIMER_0_task2.interval = 200;
-	TIMER_0_task2.cb       = TIMER_0_task2_cb;
-	TIMER_0_task2.mode     = TIMER_TASK_REPEAT;
+	calendar_enable(&CALENDAR_0);
 
-	timer_add_task(&TIMER_0, &TIMER_0_task1);
-	timer_add_task(&TIMER_0, &TIMER_0_task2);
-	timer_start(&TIMER_0);
+	date.year  = 2000;
+	date.month = 12;
+	date.day   = 31;
+
+	time.hour = 12;
+	time.min  = 59;
+	time.sec  = 59;
+
+	calendar_set_date(&CALENDAR_0, &date);
+	calendar_set_time(&CALENDAR_0, &time);
+
+	alarm.cal_alarm.datetime.time.sec = 4;
+	alarm.cal_alarm.option            = CALENDAR_ALARM_MATCH_SEC;
+	alarm.cal_alarm.mode              = REPEAT;
+
+	calendar_set_alarm(&CALENDAR_0, &alarm, alarm_cb);
 }
 
 /**
@@ -226,6 +235,33 @@ void SPI_0_example(void)
 void delay_example(void)
 {
 	delay_ms(5000);
+}
+
+static struct timer_task TIMER_0_task1, TIMER_0_task2;
+
+/**
+ * Example of using TIMER_0.
+ */
+static void TIMER_0_task1_cb(const struct timer_task *const timer_task)
+{
+}
+
+static void TIMER_0_task2_cb(const struct timer_task *const timer_task)
+{
+}
+
+void TIMER_0_example(void)
+{
+	TIMER_0_task1.interval = 100;
+	TIMER_0_task1.cb       = TIMER_0_task1_cb;
+	TIMER_0_task1.mode     = TIMER_TASK_REPEAT;
+	TIMER_0_task2.interval = 200;
+	TIMER_0_task2.cb       = TIMER_0_task2_cb;
+	TIMER_0_task2.mode     = TIMER_TASK_REPEAT;
+
+	timer_add_task(&TIMER_0, &TIMER_0_task1);
+	timer_add_task(&TIMER_0, &TIMER_0_task2);
+	timer_start(&TIMER_0);
 }
 
 void CAN_0_tx_callback(struct can_async_descriptor *const descr)

@@ -28,7 +28,7 @@ extern "C" {
 
 #include <hal_flash.h>
 
-#include <hal_timer.h>
+#include <hal_calendar.h>
 #include <hal_usart_async.h>
 #include <hal_usart_async.h>
 
@@ -36,6 +36,8 @@ extern "C" {
 #include <hal_spi_m_sync.h>
 
 #include <hal_delay.h>
+#include <hal_timer.h>
+#include <hpl_tc_base.h>
 
 #include "hal_usb_device.h"
 #include <hal_can_async.h>
@@ -43,13 +45,16 @@ extern "C" {
 extern struct adc_sync_descriptor ADC_0;
 extern struct crc_sync_descriptor CRC_0;
 
-extern struct flash_descriptor       FLASH_0;
-extern struct timer_descriptor       TIMER_0;
+extern struct flash_descriptor FLASH_0;
+
+extern struct calendar_descriptor    CALENDAR_0;
 extern struct usart_async_descriptor USART_0;
 extern struct usart_async_descriptor USART_1;
 
 extern struct i2c_m_sync_desc       I2C_0;
 extern struct spi_m_sync_descriptor SPI_0;
+
+extern struct timer_descriptor TIMER_0;
 
 extern struct can_async_descriptor CAN_0;
 
@@ -59,6 +64,9 @@ void ADC_0_init(void);
 
 void FLASH_0_init(void);
 void FLASH_0_CLOCK_init(void);
+
+void CALENDAR_0_CLOCK_init(void);
+void CALENDAR_0_init(void);
 
 void USART_0_PORT_init(void);
 void USART_0_CLOCK_init(void);

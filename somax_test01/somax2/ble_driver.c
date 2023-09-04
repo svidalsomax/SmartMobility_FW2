@@ -67,35 +67,229 @@ void ble_process(Ble *ble){
 	{
 		case BLE_BEGIN:
 		{
-			//definir buffer AT
 			strcpy(buffer, "AT");
-			//printf(buffer);
+			//if timer
 			ble_retry(BLE_RENEW, ble, buffer);
 			break;
 		}
 		case BLE_RENEW:
 		{
-			//definir algo para ver el estado del state
-			strcpy(buffer, "AT");
-			//printf(buffer);
-			ble_retry(BLE_BEGIN, ble, buffer);
+			strcpy(buffer, "AT+RENEW");
+			//strcpy(buffer, "AT");
+			//if timer
+			ble_retry(BLE_RENEW, ble, buffer);
 			break;
 		}
-		default:
+		case BLE_ROLE:
 		{
+			strcpy(buffer, "AT+ROLE1");
+			//if timer
+			ble_retry(BLE_IMME, ble, buffer);
+		}
+		case BLE_IMME:
+		{
+			strcpy(buffer, "AT+IMME1");
+			//if timer
+			ble_retry(BLE_IMME, ble, buffer);
+		}
+		case BLE_RESET:
+		{
+			strcpy(buffer, "AT+RESET");
+			// if timer
+			ble->tryCounter_ = (ble->tryCounter_ == 0) ? ble->tryCounter_+1:ble->tryCounter_ ; 
+			ble_retry(BLE_PROCESS, ble, buffer);
+		}
+		case BLE_PROCESS:
+		{
+			if(!ble->state_){
+				strcpy(ble->txBuffer_,"AT+DISI?");
+				ble->state_=1;
+			}
+			else{
+				size_t size_rxBuffer_ = strlen(ble->rxBuffer_); 
+
+				if(size_rxBuffer_ >= 8 && strcmp(ble->rxBuffer_ + (size_rxBuffer_ - 8), "OK+DISCE") == 0){
+					//funcion parse de ble->rxBuffer_
+					ble->rxBuffer_[0] ='\0';
+					ble->state_ = 0; 
+				}
+
+				/*if (millis() - scanTime_ > 3500)
+                	state_ = 0;*/
+			}
 			break;
 		}
+		default: 
+		{
+			break; 			
+		}
+	}
+	
+	//si el txBuffer_ no está vacío, envíar el buffer
+	if(!(ble->txBuffer_[0]=='\0')){  
+		ble_send_and_receive(ble->txBuffer_, ble->response_);
+		ble->scanTime_ =0;
+	}
+
+	//si el txBuffer_ está vacío y scanTime existe, actualizar scanTime_ del ble.
+	if(ble->txBuffer_[0] == '\0' && !ble->scanTime_){
+		//ble->scanTime_ = millis();
 	}
 }
 
+ble_Scan ble_getScan(Ble *ble) {
+	ble_process(ble);
+	ble_Scan beaconScan = (*ble).scan_;
+	clean_ble_Scan(&(*ble).scan_);
+	return beaconScan;
+}
 
-void ble_retry(bleStatus state, Ble *ble, char *buffer){
-	(*ble).bleState_ = state;
-	ble_send_and_receive(buffer,);
-	//command para enviar comando por uart
+void clean_ble_Scan(ble_Scan* scan){
+	scan->scanTime_ = 0;
+	for (int i = 0; i < sizeof(scan->beaconVector) / sizeof(scan->beaconVector[0]); i++) {
+		scan->beaconVector[i].mac_ = 0;
+		scan->beaconVector[i].rssi_ = 0;
+	}
+}
+
+//esta función maldita está hxc -- incompleta
+void parse(Ble *ble, char* block){
+	/*ble->scan_.scanTime_ = ble->scanTime_;
+
+	size_t size = strlen(block);
+	if (size>16){
+		size_t payload = size - 16;
+
+		if(!(payload % 78)){
+			//resizeBeaconVector(&(*ble).scan_, payload);
+		}
+	}*/
+}
+
+void ble_setName(char *name){
+	char buffer[MAX_MESSAGE_LENGTH];
+	strcpy(buffer, "AT+NAME");
+	strcat(buffer, name);
+	//uart_.write(&buffer); cambiar por io_write??
+	//delay(TIME_TO_DELAY); esta linea sirve solo para MC Studio
+}
+
+bool ble_setBaud(unsigned long baud, Ble *ble){
+	char buffer[MAX_MESSAGE_LENGTH];
+	char answer[MAX_MESSAGE_LENGTH];
+	switch (baud)
+	{
+	case 9600:
+		strcpy(buffer, "AT+BAUD0");
+		strcpy(answer, "Ok+Set:0");
+		break;
+
+	case 19200:
+		strcpy(buffer, "AT+BAUD1");
+		strcpy(answer, "Ok+Set:1");
+		break;
+
+	case 38400:
+		strcpy(buffer, "AT+BAUD2");
+		strcpy(answer, "Ok+Set:2");
+		break;
+
+	case 57600:
+		strcpy(buffer, "AT+BAUD3");
+		strcpy(answer, "Ok+Set:3");
+		break;
+
+	case 115200:
+		strcpy(buffer, "AT+BAUD4");
+		strcpy(answer, "Ok+Set:4");
+		break;
+
+	case 4800:
+		strcpy(buffer, "AT+BAUD5");
+		strcpy(answer, "Ok+Set:5");
+		break;
+
+	case 2400:
+		strcpy(buffer, "AT+BAUD6");
+		strcpy(answer, "Ok+Set:6");
+		break;
+
+	case 1200:
+		strcpy(buffer, "AT+BAUD7");
+		strcpy(answer, "Ok+Set:7");
+		break;
+
+	case 230400:
+		strcpy(buffer, "AT+BAUD8");
+		strcpy(answer, "Ok+Set:8");
+		break;
+
+	default:
+		strcpy(buffer, "AT+BAUD0");
+		strcpy(answer, "Ok+Set:0");
+		break;
+	}
+
+	/*  TODO LO SIGUIENTE DEBERÍA PODER ENCAPSULARSE EN LA FUNCIÓN BLE_SEND_RESP DE LANEK      
+	io_write buffer;
+	delay(TIME_TO_DELAY);
+	char rx_Buffer[MAX_MESSAGE_LENGTH] = io_read; */
+	ble_send_and_receive(buffer, ble->response_);
+	
+	if (strcmp((*ble).response_, answer) == 0)
+	{
+		return true;
+	} else {
+		return false; 
+	} 
+}
+
+bool ble_sleepMode(Ble *ble){ 
+	char buffer[MAX_MESSAGE_LENGTH];
+	strcpy(buffer, "AT+SLEEP");
+	ble_send_and_receive(buffer, ble->response_);
+	delay_ms(TIME_TO_DELAY);
+	ble_send_and_receive(buffer, ble->response_);
+	delay_ms(TIME_TO_DELAY);
+
+	if (strcmp((*ble).response_, "OK+SLEEP") == 0)
+	{
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool ble_wakeUp(Ble *ble){
+	char buffer[MAX_MESSAGE_LENGTH];
+	strcpy(buffer, "AAAAAAAAAAAAAAAAAAAAAAAAT");
+	ble_send_and_receive(buffer, ble->response_);
+	delay_ms(TIME_TO_DELAY);
+	ble_send_and_receive(buffer, ble->response_);
+	delay_ms(TIME_TO_DELAY);
+
+	if (strcmp((*ble).response_, "OK+WAKE") == 0)
+	{
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool ble_timer(Ble *ble)
+{
+	//return ((*ble).time_ + (*ble).timer_)< some like millis()
+	return false;
 }
 
 void ble_set_timer(unsigned long t, Ble *ble){
 	(*ble).timer_ = t;
 	//(*ble).time =  ;
 }
+
+void ble_retry(bleStatus state, Ble *ble, char *buffer){
+	(*ble).bleState_ = state;
+	ble_send_and_receive(buffer, ble->response_);
+	//command para enviar comando por uart
+}
+

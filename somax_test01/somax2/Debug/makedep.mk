@@ -22,6 +22,8 @@ hal\src\hal_atomic.c
 
 hal\src\hal_cache.c
 
+hal\src\hal_calendar.c
+
 hal\src\hal_can_async.c
 
 hal\src\hal_crc_sync.c
@@ -97,6 +99,8 @@ hpl\rtc\hpl_rtc.c
 hpl\sercom\hpl_sercom.c
 
 hpl\systick\hpl_systick.c
+
+hpl\tc\hpl_tc.c
 
 hpl\usb\hpl_usb.c
 

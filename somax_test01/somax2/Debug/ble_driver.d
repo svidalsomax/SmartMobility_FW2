@@ -141,11 +141,13 @@ ble_driver.d ble_driver.o: .././ble_driver.c .././ble_driver.h \
  ../hal/include/hal_crc_sync.h ../hal/include/hpl_crc_sync.h \
  ../hal/include/hal_ext_irq.h ../hal/include/hpl_ext_irq.h \
  ../hal/include/hal_flash.h ../hal/include/hpl_flash.h \
- ../hal/include/hal_timer.h ../hal/utils/include/utils_list.h \
- ../hal/include/hpl_timer.h ../hal/include/hal_i2c_m_sync.h \
+ ../hal/include/hal_calendar.h ../hal/include/hpl_calendar.h \
+ ../hal/utils/include/utils_list.h ../hal/include/hal_i2c_m_sync.h \
  ../hal/include/hpl_i2c_m_sync.h ../hal/include/hal_spi_m_sync.h \
  ../hal/include/hpl_spi_m_sync.h ../hal/include/hpl_spi.h \
  ../hal/utils/include/utils.h ../hal/include/hpl_spi_sync.h \
+ ../hal/include/hal_timer.h ../hal/include/hpl_timer.h \
+ ../hpl/tc/hpl_tc_base.h ../hal/include/hpl_pwm.h \
  ../hal/include/hal_usb_device.h ../hal/include/hpl_usb_device.h \
  ../hal/include/hpl_usb.h ../Config/hpl_usb_config.h \
  ../hal/include/hal_can_async.h ../hal/include/hpl_can.h \
@@ -536,11 +538,11 @@ C:\Program\ Files\ (x86)\Atmel\Studio\7.0\Packs\atmel\SAME51_DFP\1.1.139\include
 
 ../hal/include/hpl_flash.h:
 
-../hal/include/hal_timer.h:
+../hal/include/hal_calendar.h:
+
+../hal/include/hpl_calendar.h:
 
 ../hal/utils/include/utils_list.h:
-
-../hal/include/hpl_timer.h:
 
 ../hal/include/hal_i2c_m_sync.h:
 
@@ -555,6 +557,14 @@ C:\Program\ Files\ (x86)\Atmel\Studio\7.0\Packs\atmel\SAME51_DFP\1.1.139\include
 ../hal/utils/include/utils.h:
 
 ../hal/include/hpl_spi_sync.h:
+
+../hal/include/hal_timer.h:
+
+../hal/include/hpl_timer.h:
+
+../hpl/tc/hpl_tc_base.h:
+
+../hal/include/hpl_pwm.h:
 
 ../hal/include/hal_usb_device.h:
 

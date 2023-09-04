@@ -34,18 +34,14 @@
 // <i> These bits define the RTC clock relative to the peripheral clock
 // <id> rtc_arch_prescaler
 #ifndef CONF_RTC_PRESCALER
-#define CONF_RTC_PRESCALER 0x0
+
+#define CONF_RTC_PRESCALER 0x1
 
 #endif
 
-// <o> Compare Value <1-4294967295>
-// <i> These bits define the RTC Compare value, the ticks period is equal to reciprocal of (rtc clock/prescaler/compare value),
-// <i> by default 1K clock input, 1 prescaler, 1 compare value, the ticks period equals to 1ms.
-// <id> rtc_arch_comp_val
-
 #ifndef CONF_RTC_COMP_VAL
 
-#define CONF_RTC_COMP_VAL 32
+#define CONF_RTC_COMP_VAL 0
 
 #endif
 

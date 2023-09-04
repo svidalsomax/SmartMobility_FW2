@@ -4,7 +4,7 @@
 // ---- Maquina de estados del Ble. Se llama constantamente en el process machine del main
 */
 void ble_process(Ble *ble){
-	strcat((*ble).rxBuffer_, "hola"); //rxBuffer debería leer lo del UART. 
+	strcat((*ble).rxBuffer_, "hola"); //rxBuffer debería leer lo del UART. Acá consultar por cambio en el driver del ble donde se envía y recibe. Cómo es la funcionalidad de esta línea? es para ver si hay algo antes?
 	char buffer[MAX_MESSAGE_LENGTH]; 
 	switch ((*ble).bleState_) //definir el blestate_ 
 	{
@@ -23,12 +23,54 @@ void ble_process(Ble *ble){
 			strcpy(buffer, "AT_RENEW");
 			//strcpy(ble->state_, "BLE_RENEW");
             //printf(buffer);
-            ble_retry(BLE_BEGIN, ble, buffer);
+            ble_retry(BLE_PROCESS, ble, buffer);
 			break; 
-		}		
+		}
+		case BLE_PROCESS:
+		{
+			if(!ble->state_){
+				strcpy(ble->txBuffer_,"AT+DISI?");
+				ble->state_=1;
+			}
+			else{
+				size_t size = strlen(ble->rxBuffer_); 
+
+				if(size >= 8 && strcmp(ble->rxBuffer_ + (size - 8), "OK+DISCE") == 0){
+					//funcion parse de ble->rxBuffer_
+					ble->rxBuffer_[0] ='\0';
+					ble->state_ = 0; 
+				}
+
+				/*if (millis() - scanTime_ > 3500)
+                	state_ = 0;*/
+			}
+			break;
+		}
 		default: 
 		{
 			break; 			
+		}
+	}
+
+	if(!(ble->txBuffer_[0]=='\0')){
+		//ble_send_recive function
+		ble->scanTime_ =0;
+	}
+
+	if(ble->rxBuffer_[0] == '\0' && !ble->scanTime_){
+		//ble->scanTime_ = millis();
+	}
+}
+
+void parse(Ble *ble, char* block){
+	ble->scan_.scanTime_ = ble->scanTime_; 
+
+	size_t size = strlen(block); 
+	if (size>16){
+		size_t payload = size - 16; 
+
+		if(!(payload % 78)){
+			//resizeBeaconVector(&(*ble).scan_, payload);
 		}
 	}
 }
@@ -36,17 +78,24 @@ void ble_process(Ble *ble){
 /*
 // ---- Se añaden los escaneos del Ble al vector beaconScan y se borra la info de scan del Ble
 */
-ble_Scan ble_getSecan(Ble *ble) {
+ble_Scan ble_getScan(Ble *ble) {
 	ble_process(ble);
 	ble_Scan beaconScan = (*ble).scan_;
-	//(*ble).scan_ clear acá ver como hacer clear de scan  
+	clean_ble_Scan(&(*ble).scan_);
 	return beaconScan;
 }
 
-//parse ,... 
+//Hace cero todos los parámetros del scan, incluyendo el beaconVector
+void clean_ble_Scan(ble_Scan* scan){
+	scan->scanTime_ = 0; 
+    for (int i = 0; i < sizeof(scan->beaconVector) / sizeof(scan->beaconVector[0]); i++) {
+        scan->beaconVector[i].mac_ = 0;
+        scan->beaconVector[i].rssi_ = 0;
+    }
+}
 
 /*
-// ---- Setea nombre del Ble
+// ---- ble_setName: Setea nombre del Ble
 */
 void ble_setName(char *name){ 
 	char buffer[MAX_MESSAGE_LENGTH];
@@ -199,6 +248,6 @@ bool ble_timer(Ble *ble)
 */
 void ble_retry(bleStatus state, Ble *ble, char *buffer){
 	(*ble).bleState_ = state; 
-    strcpy((*ble).state_, buffer);
+    //strcpy((*ble).state_, buffer);
     //command para enviar comando por uart
 }
