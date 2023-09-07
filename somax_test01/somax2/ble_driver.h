@@ -129,6 +129,6 @@ void ble_retry(bleStatus state, Ble *ble, char *buffer);
 /*
 // ---- Setea tiempo a comparar para triggerear timer
 */
-void ble_set_timer(unsigned long t, Ble *ble);
+void ble_setTimer(unsigned long t, Ble *ble);
 
 #endif /* BLE_DRIVER_H_ */

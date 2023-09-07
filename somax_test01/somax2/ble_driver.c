@@ -49,7 +49,7 @@ void ble_send_and_receive(char* command, char* response)
 	strcat(at_cmd, command);
 	io_write(ble_io, (uint8_t *)at_cmd, strlen(at_cmd));
 	delay_ms(TIME_TO_DELAY);
-	io_read(ble_io, response, MAX_MESSAGE_LENGTH);
+	io_read(ble_io, (uint8_t *)response, MAX_MESSAGE_LENGTH);
 	delay_ms(TIME_TO_DELAY);
 }
 
@@ -61,10 +61,10 @@ void ble_send_and_receive(char* command, char* response)
 uint32_t ble_millis_ = 0; 
 
 void ble_process(Ble *ble){
-	//strcat((*ble).rxBuffer_, "hola"); //rxBuffer debería leer lo del UART.
-	//io_read(ble_io, ble->rxBuffer_, MAX_MESSAGE_LENGTH);
-	//ble_millis_ = _calendar_get_counter(&CALENDAR_0.device);
+
+	io_read(ble_io, (uint8_t *)ble->rxBuffer_, MAX_MESSAGE_LENGTH);
 	char buffer[MAX_MESSAGE_LENGTH];
+	
 	switch ((*ble).bleState_) //definir el blestate_
 	{
 		case BLE_BEGIN:
@@ -100,7 +100,7 @@ void ble_process(Ble *ble){
 			// if timer
 			ble->tryCounter_ = (ble->tryCounter_ == 0) ? ble->tryCounter_+1:ble->tryCounter_ ; 
 			//ble_retry(BLE_PROCESS, ble, buffer);
-			ble_retry(BLE_BEGIN, ble, buffer);
+			ble_retry(BLE_PROCESS, ble, buffer);
 		}
 		case BLE_PROCESS:
 		{
@@ -281,18 +281,24 @@ bool ble_wakeUp(Ble *ble){
 
 bool ble_timer(Ble *ble)
 {
-	return ((*ble).time_ + (*ble).timer_)<  _calendar_get_counter(&CALENDAR_0.device);// some like millis()
-	return false;
+	return ((*ble).time_ + (*ble).timer_ <  _calendar_get_counter(&CALENDAR_0.device));// some like millis()
 }
 
-void ble_set_timer(unsigned long t, Ble *ble){
-	(*ble).timer_ = t;
+void ble_setTimer(unsigned long t, Ble *ble){
 	(*ble).time_ = _calendar_get_counter(&CALENDAR_0.device);// some like millis()
+	(*ble).timer_ = t;
 }
 
 void ble_retry(bleStatus state, Ble *ble, char *buffer){
-	(*ble).bleState_ = state;
-	ble_send_and_receive(buffer, ble->response_);
+	//(*ble).bleState_ = state;	
+	if (ble->tryCounter_ < 2){
+		ble_send_and_receive(buffer, ble->response_); //cambiar a io_write;
+		ble->tryCounter_ ++; 
+		ble_setTimer(TIME_TO_DELAY, ble);
+	} else {
+		ble->bleState_ = state; 
+		ble->tryCounter_ = 0; 
+	}
 	//command para enviar comando por uart
 }
 
