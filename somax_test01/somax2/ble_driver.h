@@ -21,6 +21,10 @@
 **      VARIABLES SOMAX - BLE
 ******************************************************************************/
 
+
+#define MAX_MESSAGE_LENGTH 64	// Cambiar tambien USART_0_BUFFER_SIZE en driver_init.c
+#define TIME_TO_DELAY 20
+
 typedef enum {
 	BLE_BEGIN,
 	BLE_RENEW,
@@ -39,13 +43,13 @@ typedef struct {
 //ble_Scan - used for ...
 typedef struct{
 	unsigned long scanTime_;
-	Beacon beaconVector[100];
+	Beacon *beaconVector;
 }ble_Scan;
 
 
 typedef struct{
-	char txBuffer_[64];
-	char rxBuffer_[64];
+	char txBuffer_[MAX_MESSAGE_LENGTH];
+	char rxBuffer_[MAX_MESSAGE_LENGTH];
 	bleStatus bleState_;
 	unsigned long timer_;
 	unsigned long time_;
@@ -54,7 +58,7 @@ typedef struct{
 	bool role_ ;
 	int scanTime_;
 	ble_Scan scan_;
-	char response_[64];
+	char response_[MAX_MESSAGE_LENGTH];
 }Ble;
 
 

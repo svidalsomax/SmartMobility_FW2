@@ -6,8 +6,6 @@
 
 #include "ble_driver.h"
 
-#define MAX_MESSAGE_LENGTH 64	// Cambiar tambien USART_0_BUFFER_SIZE en driver_init.c
-#define TIME_TO_DELAY 20
 
 static struct io_descriptor *ble_io;
 
@@ -62,6 +60,7 @@ void ble_send_and_receive(char* command, char* response)
 
 void ble_process(Ble *ble){
 	//strcat((*ble).rxBuffer_, "hola"); //rxBuffer debería leer lo del UART.
+	//io_read(ble_io, ble->rxBuffer_, MAX_MESSAGE_LENGTH);
 	char buffer[MAX_MESSAGE_LENGTH];
 	switch ((*ble).bleState_) //definir el blestate_
 	{
@@ -77,7 +76,7 @@ void ble_process(Ble *ble){
 			strcpy(buffer, "AT+RENEW");
 			//strcpy(buffer, "AT");
 			//if timer
-			ble_retry(BLE_RENEW, ble, buffer);
+			ble_retry(BLE_ROLE, ble, buffer);
 			break;
 		}
 		case BLE_ROLE:
@@ -90,14 +89,15 @@ void ble_process(Ble *ble){
 		{
 			strcpy(buffer, "AT+IMME1");
 			//if timer
-			ble_retry(BLE_IMME, ble, buffer);
+			ble_retry(BLE_RESET, ble, buffer);
 		}
 		case BLE_RESET:
 		{
 			strcpy(buffer, "AT+RESET");
 			// if timer
 			ble->tryCounter_ = (ble->tryCounter_ == 0) ? ble->tryCounter_+1:ble->tryCounter_ ; 
-			ble_retry(BLE_PROCESS, ble, buffer);
+			//ble_retry(BLE_PROCESS, ble, buffer);
+			ble_retry(BLE_BEGIN, ble, buffer);
 		}
 		case BLE_PROCESS:
 		{
@@ -109,7 +109,7 @@ void ble_process(Ble *ble){
 				size_t size_rxBuffer_ = strlen(ble->rxBuffer_); 
 
 				if(size_rxBuffer_ >= 8 && strcmp(ble->rxBuffer_ + (size_rxBuffer_ - 8), "OK+DISCE") == 0){
-					//funcion parse de ble->rxBuffer_
+					//funcion parse de ble->rxBuffer_ --- patearla un poco
 					ble->rxBuffer_[0] ='\0';
 					ble->state_ = 0; 
 				}

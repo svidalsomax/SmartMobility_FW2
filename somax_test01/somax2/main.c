@@ -7,6 +7,7 @@
 #include "imu_driver.h"
 #include "fram_driver.h"
 #include "spi_can_driver.h"
+#include "driver_examples.h"
 
 #define USB_DEBUG 1		// Activa el debug por serial USB
 #define USB_COMMS_LENGTH 64	// Largo de comandos serial USB
@@ -459,7 +460,13 @@ int main(void)
 	gpio_set_pin_level(LED2, false);
 	delay_ms(333);
 	
-	//strcpy(ble.state_,"bleState");
+	//obtener millis - inicializa el calendario y después se ibtebta obtener el calendar
+	CALENDAR_0_example();
+	//unsigned long current_ts;
+	uint32_t numero = 20;
+	char numero_str[20];
+	sprintf(numero_str, "%lu", (unsigned long)numero);
+	usb_serial_write(numero_str, strlen(numero_str));
 	while (1) {
 		if (errorcnt == 0)
 		{ 
@@ -468,8 +475,15 @@ int main(void)
 			gpio_set_pin_level(LED2, false);
 			usb_read_routine();
 			ble_process(&ble);
-			usb_serial_write(ble.response_, strlen(ble.response_));
-			delay_ms(3000);
+			//usb_serial_write(ble.response_, strlen(ble.response_));
+			//usb_serial_write(ble.rxBuffer_, strlen(ble.rxBuffer_));
+			//current_ts = _calendar_get_counter(&CALENDAR_0.device);
+			//char millis_str[20];
+			//snprintf(millis_str, sizeof(millis_str), "%lu", (uint32_t)current_ts);
+			//sprintf(millis_str, "%d", int_prueba);
+			//usb_serial_write("\n", strlen("\n"));
+			//usb_serial_write(millis_str, sizeof(millis_str));
+			delay_ms(1000);
 		}
 		else
 		{
@@ -507,6 +521,6 @@ int main(void)
 			delay_ms(700);
 			}
 		}
-		MCU_low_power_mode();
+		//MCU_low_power_mode();
 	}
 }

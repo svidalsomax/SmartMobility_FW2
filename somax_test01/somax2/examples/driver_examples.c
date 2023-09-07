@@ -132,17 +132,17 @@ void CALENDAR_0_example(void)
 
 	calendar_enable(&CALENDAR_0);
 
-	date.year  = 2000;
-	date.month = 12;
-	date.day   = 31;
+	date.year  = 2023;
+	date.month = 9;
+	date.day   = 6;
 
-	time.hour = 12;
-	time.min  = 59;
-	time.sec  = 59;
+	time.hour = 17;
+	time.min  = 00;
+	time.sec  = 00;
 
 	calendar_set_date(&CALENDAR_0, &date);
 	calendar_set_time(&CALENDAR_0, &time);
-
+	
 	alarm.cal_alarm.datetime.time.sec = 4;
 	alarm.cal_alarm.option            = CALENDAR_ALARM_MATCH_SEC;
 	alarm.cal_alarm.mode              = REPEAT;
