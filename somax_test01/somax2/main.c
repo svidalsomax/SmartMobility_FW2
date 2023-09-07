@@ -460,13 +460,14 @@ int main(void)
 	gpio_set_pin_level(LED2, false);
 	delay_ms(333);
 	
-	//obtener millis - inicializa el calendario y después se ibtebta obtener el calendar
-	CALENDAR_0_example();
-	//unsigned long current_ts;
-	uint32_t numero = 20;
-	char numero_str[20];
-	sprintf(numero_str, "%lu", (unsigned long)numero);
-	usb_serial_write(numero_str, strlen(numero_str));
+	//inicializa el calendario y por lo tanto el timestamp para todo el programa
+	CALENDAR_0_example(); 
+	
+	//esto es como el getble inicial, después se referencia al struct ble a todo
+	ble_set_timer(TIME_TO_DELAY_BLE, &ble);
+	ble.tryCounter_ = ble.tryCounter_ + 1; 
+
+	
 	while (1) {
 		if (errorcnt == 0)
 		{ 
@@ -474,16 +475,21 @@ int main(void)
 			gpio_set_pin_level(LED1, false);
 			gpio_set_pin_level(LED2, false);
 			usb_read_routine();
-			ble_process(&ble);
+			//ble_process(&ble);
+			
+			char timer_str[20] = {0};
+			sprintf(timer_str, "%lu", ble.timer_);
+			usb_serial_write("\n", strlen("\n"));
+			delay_ms(10);
+			usb_serial_write(timer_str, strlen(timer_str));
+			delay_ms(10);
 			//usb_serial_write(ble.response_, strlen(ble.response_));
-			//usb_serial_write(ble.rxBuffer_, strlen(ble.rxBuffer_));
+			
 			//current_ts = _calendar_get_counter(&CALENDAR_0.device);
 			//char millis_str[20];
-			//snprintf(millis_str, sizeof(millis_str), "%lu", (uint32_t)current_ts);
-			//sprintf(millis_str, "%d", int_prueba);
-			//usb_serial_write("\n", strlen("\n"));
-			//usb_serial_write(millis_str, sizeof(millis_str));
-			delay_ms(1000);
+			//sprintf(millis_str, "%lu", (uint32_t)current_ts);
+			//usb_serial_write(millis_str, strlen(millis_str));
+			//delay_ms(3000);  //revisar precisión haciendo aún más corto el while
 		}
 		else
 		{
@@ -521,6 +527,6 @@ int main(void)
 			delay_ms(700);
 			}
 		}
-		//MCU_low_power_mode();
+		MCU_low_power_mode();
 	}
 }

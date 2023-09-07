@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "ble.h"
@@ -15,6 +16,8 @@ int main() {
 	char numero_str[20];
 	sprintf(numero_str, "%lu", (unsigned long)numero);
 	printf(numero_str);
+	int time = time(NULL);
+	printf("Timestamp: %d\n",time);
     while(1){
 		//ble_process(&ble);
 		//printf("%d",ble.state_);

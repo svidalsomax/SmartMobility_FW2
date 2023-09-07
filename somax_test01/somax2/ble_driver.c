@@ -58,9 +58,12 @@ void ble_send_and_receive(char* command, char* response)
 **      FUNCIONES SOMAX
 ******************************************************************************/
 
+uint32_t ble_millis_ = 0; 
+
 void ble_process(Ble *ble){
 	//strcat((*ble).rxBuffer_, "hola"); //rxBuffer debería leer lo del UART.
 	//io_read(ble_io, ble->rxBuffer_, MAX_MESSAGE_LENGTH);
+	//ble_millis_ = _calendar_get_counter(&CALENDAR_0.device);
 	char buffer[MAX_MESSAGE_LENGTH];
 	switch ((*ble).bleState_) //definir el blestate_
 	{
@@ -278,13 +281,13 @@ bool ble_wakeUp(Ble *ble){
 
 bool ble_timer(Ble *ble)
 {
-	//return ((*ble).time_ + (*ble).timer_)< some like millis()
+	return ((*ble).time_ + (*ble).timer_)<  _calendar_get_counter(&CALENDAR_0.device);// some like millis()
 	return false;
 }
 
 void ble_set_timer(unsigned long t, Ble *ble){
 	(*ble).timer_ = t;
-	//(*ble).time =  ;
+	(*ble).time_ = _calendar_get_counter(&CALENDAR_0.device);// some like millis()
 }
 
 void ble_retry(bleStatus state, Ble *ble, char *buffer){

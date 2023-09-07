@@ -24,6 +24,7 @@
 
 #define MAX_MESSAGE_LENGTH 64	// Cambiar tambien USART_0_BUFFER_SIZE en driver_init.c
 #define TIME_TO_DELAY 20
+#define TIME_TO_DELAY_BLE 750
 
 typedef enum {
 	BLE_BEGIN,
