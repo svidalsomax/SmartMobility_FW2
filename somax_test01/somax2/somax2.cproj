@@ -584,6 +584,9 @@
     <Compile Include="ble_driver.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Imei.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Config\hpl_adc_config.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1164,6 +1167,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="imu_driver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Imei.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">

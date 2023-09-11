@@ -60,3 +60,8 @@ void simcom_receive(char* response)
 	io_read(simcom_io, response, MAX_MESSAGE_LENGTH);
 	delay_ms(TIME_TO_DELAY);
 }
+
+/******************************************************************************
+**     FUNCIONES SOMAX 
+******************************************************************************/
+

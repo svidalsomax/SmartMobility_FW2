@@ -492,10 +492,7 @@ int main(void)
 			usb_serial_write(tryCounter_str, strlen(tryCounter_str));
 			delay_ms(20); 
 			usb_serial_write(ble.state_, strlen(ble.state_));
-			//current_ts = _calendar_get_counter(&CALENDAR_0.device);
-			//char millis_str[20];
-			//sprintf(millis_str, "%lu", (uint32_t)current_ts);
-			//usb_serial_write(millis_str, strlen(millis_str));
+
 			delay_ms(3000);  //revisar precisión haciendo aún más corto el while
 		}
 		else
@@ -534,6 +531,6 @@ int main(void)
 			delay_ms(700);
 			}
 		}
-		MCU_low_power_mode();
+		//MCU_low_power_mode();
 	}
 }

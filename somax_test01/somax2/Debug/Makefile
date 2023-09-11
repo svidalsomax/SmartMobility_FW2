@@ -397,9 +397,7 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 
 LIB_DEP+= 
 
-LINKER_SCRIPT_DEP+=  \
-../Device_Startup/same51j20a_flash.ld \
-../Device_Startup/same51j20a_sram.ld
+LINKER_SCRIPT_DEP+= 
 
 
 # AVR32/GNU C Compiler

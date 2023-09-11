@@ -70,37 +70,54 @@ void ble_process(Ble *ble){
 		case BLE_BEGIN:
 		{
 			strcpy(buffer, "AT");
-			//if timer
-			ble_retry(BLE_RENEW, ble, buffer);
+			
+			if (ble_timer(ble)){
+				ble_retry(BLE_RENEW, ble, buffer);	
+			}
+			
 			break;
 		}
 		case BLE_RENEW:
 		{
 			strcpy(buffer, "AT+RENEW");
-			//strcpy(buffer, "AT");
-			//if timer
-			ble_retry(BLE_ROLE, ble, buffer);
+			
+			if (ble_timer(ble)){
+				ble_retry(BLE_ROLE, ble, buffer);
+			}
+			
 			break;
 		}
 		case BLE_ROLE:
 		{
 			strcpy(buffer, "AT+ROLE1");
-			//if timer
-			ble_retry(BLE_IMME, ble, buffer);
+			
+			if (ble_timer(ble)){
+				ble_retry(BLE_IMME, ble, buffer);
+			}
+			break;
+			
 		}
 		case BLE_IMME:
 		{
 			strcpy(buffer, "AT+IMME1");
-			//if timer
-			ble_retry(BLE_RESET, ble, buffer);
+			
+			if (ble_timer(ble)){
+				ble_retry(BLE_RESET, ble, buffer);	
+			}
+			break;
+			
 		}
 		case BLE_RESET:
 		{
 			strcpy(buffer, "AT+RESET");
 			// if timer
-			ble->tryCounter_ = (ble->tryCounter_ == 0) ? ble->tryCounter_+1:ble->tryCounter_ ; 
-			//ble_retry(BLE_PROCESS, ble, buffer);
-			ble_retry(BLE_PROCESS, ble, buffer);
+			
+			if (ble_timer(ble)){
+				ble->tryCounter_ = (ble->tryCounter_ == 0) ? ble->tryCounter_+1:ble->tryCounter_ ;
+				ble_retry(BLE_PROCESS, ble, buffer);				
+			}
+			break;
+
 		}
 		case BLE_PROCESS:
 		{
@@ -117,8 +134,9 @@ void ble_process(Ble *ble){
 					ble->state_ = 0; 
 				}
 
-				/*if (millis() - scanTime_ > 3500)
-                	state_ = 0;*/
+				if (_calendar_get_counter(&CALENDAR_0.device) - ble->scanTime_ > 3500){
+					ble->state_ = 0;
+				}	
 			}
 			break;
 		}
@@ -130,7 +148,8 @@ void ble_process(Ble *ble){
 	
 	//si el txBuffer_ no está vacío, envíar el buffer
 	if(!(ble->txBuffer_[0]=='\0')){  
-		ble_send_and_receive(ble->txBuffer_, ble->response_);
+		//ble_send_and_receive(ble->txBuffer_, ble->response_);
+		io_write(ble_io, (uint8_t *)ble->txBuffer_, strlen(ble->txBuffer_));
 		ble->scanTime_ =0;
 	}
 
@@ -290,15 +309,14 @@ void ble_setTimer(unsigned long t, Ble *ble){
 }
 
 void ble_retry(bleStatus state, Ble *ble, char *buffer){
-	//(*ble).bleState_ = state;	
+
 	if (ble->tryCounter_ < 2){
-		ble_send_and_receive(buffer, ble->response_); //cambiar a io_write;
+		io_write(ble_io, (uint8_t *)buffer, strlen(buffer));
 		ble->tryCounter_ ++; 
 		ble_setTimer(TIME_TO_DELAY, ble);
 	} else {
 		ble->bleState_ = state; 
 		ble->tryCounter_ = 0; 
 	}
-	//command para enviar comando por uart
 }
 
