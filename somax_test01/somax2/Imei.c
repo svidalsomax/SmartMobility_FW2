@@ -17,3 +17,14 @@ void imei_loadText(Imei * imei, char * imei_str){
 
 	imei->imei_ = strtoll(imei_str, NULL, 10);
 }
+
+void imei_binary(Imei * imei, char * encoded){
+	encode(imei->imei_, 7, encoded);
+}
+
+unsigned long long imei_value(Imei * imei){
+	return imei->imei_;
+}
+
+
+//faltan los operatorss

@@ -30,6 +30,9 @@ typedef struct {
  */
 void imei_init(Imei * imei, char * imei_str);
 void imei_loadText(Imei * imei, char * imei_str);
+void imei_binary(Imei * imei, char * encoded);
+unsigned long long imei_value(Imei * imei);
+
 
 
 

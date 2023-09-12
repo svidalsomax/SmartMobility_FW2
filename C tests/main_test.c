@@ -4,11 +4,11 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "Binary.h"
 #include "ble.h"
 #include "imei.h"
+//#include "Binary.h"
 
-Ble ble = {0};
+Ble ble = {0}; 
 Imei imei ={0}; 
 
 
@@ -29,7 +29,9 @@ int main() {
 	printf("Imei: %llu \n", imei.imei_);
 
 	char encodedString[sizeof(imei.imei_)];
-	encode(imei.imei_, 7, encodedString);
+
+	imei_binary(&imei, encodedString);
+
 
 	for (int i = 0; i < 7; i++) {
 		printBinary(encodedString[i]);
