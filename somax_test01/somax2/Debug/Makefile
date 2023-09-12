@@ -78,6 +78,7 @@ SUBDIRS :=  \
 C_SRCS +=  \
 ../atmel_start.c \
 ../ble_driver.c \
+../Imei.c \
 ../Device_Startup/startup_same51.c \
 ../Device_Startup/system_same51.c \
 ../driver_init.c \
@@ -146,6 +147,7 @@ ASM_SRCS +=
 OBJS +=  \
 atmel_start.o \
 ble_driver.o \
+Imei.o \
 Device_Startup/startup_same51.o \
 Device_Startup/system_same51.o \
 driver_init.o \
@@ -207,6 +209,7 @@ usb_start.o
 OBJS_AS_ARGS +=  \
 atmel_start.o \
 ble_driver.o \
+Imei.o \
 Device_Startup/startup_same51.o \
 Device_Startup/system_same51.o \
 driver_init.o \
@@ -268,6 +271,7 @@ usb_start.o
 C_DEPS +=  \
 atmel_start.d \
 ble_driver.d \
+Imei.d \
 Device_Startup/startup_same51.d \
 Device_Startup/system_same51.d \
 driver_init.d \
@@ -329,6 +333,7 @@ usb_start.d
 C_DEPS_AS_ARGS +=  \
 atmel_start.d \
 ble_driver.d \
+Imei.d \
 Device_Startup/startup_same51.d \
 Device_Startup/system_same51.d \
 driver_init.d \
@@ -409,6 +414,13 @@ LINKER_SCRIPT_DEP+=
 	
 
 ./ble_driver.o: .././ble_driver.c
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU C Compiler : 6.3.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE)  -x c -mthumb -D__SAME51J20A__ -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I"../hpl/tc" -I"../Config" -I".." -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/adc" -I"../hpl/can" -I"../hpl/cmcc" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/dsu" -I"../hpl/eic" -I"../hpl/gclk" -I"../hpl/mclk" -I"../hpl/nvmctrl" -I"../hpl/osc32kctrl" -I"../hpl/oscctrl" -I"../hpl/pac" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/ramecc" -I"../hpl/rtc" -I"../hpl/sercom" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAME51_DFP\1.1.139\include"  -Og -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m4 -c -std=gnu99 -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+./Imei.o: .././Imei.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 6.3.1
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\arm\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE)  -x c -mthumb -D__SAME51J20A__ -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\arm\CMSIS\5.4.0\CMSIS\Core\Include" -I"../hpl/tc" -I"../Config" -I".." -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/adc" -I"../hpl/can" -I"../hpl/cmcc" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/dsu" -I"../hpl/eic" -I"../hpl/gclk" -I"../hpl/mclk" -I"../hpl/nvmctrl" -I"../hpl/osc32kctrl" -I"../hpl/oscctrl" -I"../hpl/pac" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/ramecc" -I"../hpl/rtc" -I"../hpl/sercom" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\SAME51_DFP\1.1.139\include"  -Og -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m4 -c -std=gnu99 -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

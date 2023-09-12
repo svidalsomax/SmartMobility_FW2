@@ -578,6 +578,9 @@
     <Compile Include="atmel_start_pins.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Binary.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="ble_driver.c">
       <SubType>compile</SubType>
     </Compile>

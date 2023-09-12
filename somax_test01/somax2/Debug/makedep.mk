@@ -6,6 +6,8 @@ atmel_start.c
 
 ble_driver.c
 
+Imei.c
+
 Device_Startup\startup_same51.c
 
 Device_Startup\system_same51.c

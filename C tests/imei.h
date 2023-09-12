@@ -1,5 +1,5 @@
 /*
- * Imei.h
+ *  Imei.h
  *
  * Created: 11-09-2023 18:49:31
  *  Author: SVL / DQ
@@ -26,11 +26,10 @@ typedef struct {
 
 
 /*
- * MÉTODOS 
+ * MÃ‰TODOS 
  */
-void imei_init(Imei * imei, char * imei_str);
-void imei_loadText(Imei * imei, char * imei_str);
+void imei_init(Imei * imei, char * imei_str); 
+void imei_loadText(Imei * imei, char * imei_str); 
 
 
-
-#endif /* IMEI_H_ */
+#endif /* INCFILE1_H_ */
