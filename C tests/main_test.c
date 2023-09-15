@@ -32,6 +32,11 @@ int main() {
 
 	imei_binary(&imei, encodedString);
 
+	Imei imei2 = {0}; 
+	imei_init(&imei2, "123456789876234");
+
+	printf("Imeis are equal? %s\n", imei_is_equal(&imei, &imei2) ? "true" : "false"); 
+	printf("Imeis are not equal? %s\n", imei_is_not_equal(&imei, &imei2) ? "true" : "false"); 
 
 	for (int i = 0; i < 7; i++) {
 		printBinary(encodedString[i]);

@@ -491,7 +491,10 @@ int main(void)
 			sprintf(tryCounter_str, "%d", (int )ble.tryCounter_);
 			usb_serial_write(tryCounter_str, strlen(tryCounter_str));
 			delay_ms(20); 
-			usb_serial_write(ble.state_, strlen(ble.state_));
+			
+			char * ble_state_str = {0}; 
+			sprintf(ble_state_str, "%d", (char)ble.state_);
+			usb_serial_write(ble_state_str, strlen(ble_state_str));
 
 			delay_ms(3000);  //revisar precisión haciendo aún más corto el while
 		}

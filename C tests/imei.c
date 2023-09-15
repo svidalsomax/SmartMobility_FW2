@@ -20,5 +20,25 @@ unsigned long long imei_value(Imei * imei){
     return imei->imei_;
 }
 
+//faltan los operators. No se usará el operator= que es básicamente hacer una asignación. 
 
-//faltan los operatorss
+bool imei_is_equal(Imei * imei1, Imei * imei2) {
+    if (imei1 && imei2)
+    {
+       return (imei1->imei_ == imei2->imei_);
+    }
+    else {
+        return false; 
+    }
+}
+
+bool imei_is_not_equal(Imei * imei1, Imei * imei2){ 
+    if (imei1 && imei2)
+    {
+       return !(imei1->imei_ == imei2->imei_);
+    }
+    else {
+        return false; 
+    }
+}
+
