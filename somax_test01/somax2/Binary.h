@@ -2,7 +2,7 @@
  * Binary.h
  *
  * Created: 12-09-2023 13:04:29
- *  Author: SVL / DQ
+ *  Author: SVL / DQC
  */ 
 
 #include <stdio.h>

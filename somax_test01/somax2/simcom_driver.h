@@ -92,7 +92,7 @@ typedef struct {
 	char* value_ ; 
 	char* message_ ; 
 	int array_[3]; 
-	//Imei imei_; 
+	Imei imei_; 
 	//Position position_; 
 } Token;
 	
