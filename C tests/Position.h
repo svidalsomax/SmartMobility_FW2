@@ -32,7 +32,7 @@ void Position_Init_Default(Position * position);
 void Position_Init_Coordenate(Position * position, Position * overflow, double latitude, double longitude);
 void Position_Init_Str(Position * position, char * position_string);
 
-void loadRaw(Position * Position, char * position_string);
+int loadRaw(Position * Position, char * position_string);
 //string binary; 
 
 /*

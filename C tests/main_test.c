@@ -67,11 +67,11 @@ int main() {
 	Position_Init_Default(&overflow);
 	Position_Init_Default(&position);
 
-	char gpsinfo[10];
-	strcpy(gpsinfo,"+GPSINFO:");
+	char *gpsinfo;
+	strcpy(gpsinfo,"+CGPSINFO:3113.343286,N,12121.234064,E,250311,072809.3,44.1,0.0,0");
 	Position_Init_Str(&position, gpsinfo); 
 
-	printf("%f", position.latitude_);
+	//printf("%f", position.latitude_);
     while(1){
 		//ble_process(&ble);
 		//printf("%d",ble.state_);
