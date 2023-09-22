@@ -71,9 +71,22 @@ int main() {
 	strcpy(gpsinfo,"+CGPSINFO:3113.343286,N,12121.234064,E,250311,072809.3,44.1,0.0,0");
 	Position_Init_Str(&position, gpsinfo); 
 
-	//printf();
+	printf("%f \n", position.latitude_);
+	printf("%f \n", position.longitude_);
 
-	//printf("%f", position.latitude_);
+	char position_encoded[6];
+
+	binary_position(&position, position_encoded); 
+
+	for (int i = 0; i < 7; i++) {
+		//printBinary(encodedString[i]);
+        printf("%02X", (unsigned char)position_encoded[i]);
+    }
+	printf("\n");
+
+	for (int i = 0; i < 7; i++) {
+		printBinary(position_encoded[i]);
+    }	
     while(1){
 		//ble_process(&ble);
 		//printf("%d",ble.state_);

@@ -58,6 +58,7 @@ int loadRaw(Position * position, char * position_string){
     begin_position_string[10] = '\0';
     printf("%s \n", begin_position_string);
     printf("%s \n", position_string);
+
     if (strcmp(begin_position_string,"+CGPSINFO:") == 0)
     {
         printf("ENTRA CASO 1 \n");
@@ -125,16 +126,33 @@ int loadRaw(Position * position, char * position_string){
         position->longitude_= sign * (degrees + minutes / 60.);
 
         //printf("%s \n", minutes_str);
-        printf("%f \n", position->longitude_);
-        printf("%f \n", position->latitude_);
+        //printf("%f \n", position->longitude_);
+        //printf("%f \n", position->latitude_);
     }
-    else
+}
+
+void binary_position(Position * position, char binary[6]){
+    if ((position->latitude_ < -90.) || (position->latitude_ > 90.) || (position->longitude_ < -180.) || (position->longitude_ >= 180.))
     {
-        position->latitude_= 200;
-        printf("ENTRA CASO 2");
+        strcpy(binary, "\xFF\xFF\xFF\0\0\0");    
+    } else {
+        unsigned long latitudeEncoded = (unsigned long)((position->latitude_ / 180. + 0.5) * 0xFFFFFE + 0.5);
+        unsigned long longitudeEncoded = (unsigned long)((position->longitude_ / 360. + 0.5) * 0x1000000 + 0.5);
+
+        binary[0] = (char)((latitudeEncoded       ) & 0xFF);
+        binary[1] = (char)((latitudeEncoded  >>  8) & 0xFF);
+        binary[2] = (char)((latitudeEncoded  >> 16) & 0xFF);
+        binary[3] = (char)((longitudeEncoded      ) & 0xFF);
+        binary[4] = (char)((longitudeEncoded >>  8) & 0xFF);
+        binary[5] = (char)((longitudeEncoded >> 16) & 0xFF); 
     }
 }
 
-void Position_is_equal(Position * pos1, Position * pos2){
-
+bool position_is_equal(Position * position1, Position * position2) {
+    return (position1->latitude_ == position2->latitude_ && position1->longitude_ == position2->longitude_);
 }
+
+bool position_is_not_equal(Position * position1, Position * position2){ 
+    return !(position_is_equal(position1, position2));
+}
+
