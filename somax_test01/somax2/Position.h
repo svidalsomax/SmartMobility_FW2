@@ -8,7 +8,8 @@
 
 // INCLUDES
 #include <string.h>
-//#include<vector> ?? no se usa vector, pero vamos a asumir ciertos structs como vectores de dos dimensiones
+#include <stdbool.h>
+//#include<vector> ?? no se usa vector en C, pero vamos a asumir ciertos structs como vectores de dos dimensiones
 
 #ifndef POSITION_H_
 #define POSITION_H_
@@ -33,8 +34,12 @@ void Position_Init_Default(Position * position);
 void Position_Init_Coordenate(Position * position, Position * overflow, double latitude, double longitude);
 void Position_Init_Str(Position * position, char * position_string);
 
-void loadRaw(Position * Position, char * position_string);
-//string binary;
+//arreglar esto
+int loadRaw(Position * position, char * position_string);
+void binary_position(Position * position, char binary[6]);
+
+bool position_is_equal(Position * position1, Position * position2);
+bool position_is_not_equal(Position * position1, Position * position2);
 
 /*
 double latitude(Position * position);

@@ -4,16 +4,21 @@
 #include <time.h>
 #include <unistd.h>
 
+
+#include "main_test.h"
 #include "ble.h"
 #include "imei.h"
 //#include "Binary.h"
 #include "Position.h"
+#include "simcom_driver.h"
 
 Ble ble = {0}; 
 Imei imei ={0}; 
 Position position = {0};
 Position overflow = {0};
 Position zero = {0};
+
+Simcom simcom;
 
 void printBinary(char byte) {
     for (int i = 7; i >= 0; i--) {
@@ -22,6 +27,35 @@ void printBinary(char byte) {
 }
 
 int main() {
+
+	/*
+	 * SIMCOM TEST
+	*/
+    const char buffer[] = "115,345,2123,4";
+    int integers[10];
+    int count;
+
+    getIntegers(buffer, integers, &count);
+
+    // Imprimir los números enteros extraídos
+    for (int i = 0; i < count; i++) {
+        //printf("%d ", integers[i]);
+    }
+    //printf("\n");	
+
+	Simcom_init(&simcom);
+	printf("IP 1: %s \n", simcom.ipaddr_); 
+
+	Simcom_setApn(&simcom, "iot.secure", "", ""); 
+	printf("APN: \n apn: %s \n user: %s \n password: %s \n",simcom.apn_ ,simcom.user_,simcom.password_);
+
+	char * buffer2 = Simcom_IPaddress(&simcom); 
+	printf("IP 2: %s \n", buffer2); 
+
+	Simcom_process(&simcom);
+	printf("After process");
+
+
 	//strcpy(ble.state_, "hola");
 	//ble_set_timer(TIME_TO_DELAY, &ble);
 
@@ -64,6 +98,7 @@ int main() {
 	 * POSITION TEST
 	 */
 
+	/*	
 	Position_Init_Default(&overflow);
 	Position_Init_Default(&position);
 
@@ -87,6 +122,7 @@ int main() {
 	for (int i = 0; i < 7; i++) {
 		printBinary(position_encoded[i]);
     }	
+*/ 
     while(1){
 		//ble_process(&ble);
 		//printf("%d",ble.state_);

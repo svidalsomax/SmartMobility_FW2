@@ -16,7 +16,9 @@
 #include <hal_usart_async.h>
 #include <driver_init.h>
 #include <string.h>
+
 #include "Imei.h"
+#include "Position.h"
 
 
 int simcom_init(void);
@@ -93,10 +95,14 @@ typedef struct {
 	char* message_ ; 
 	int array_[3]; 
 	Imei imei_; 
-	//Position position_; 
+	Position position_; 
 } Token;
 	
-	
+typedef struct {
+	unsigned long time_;
+	Position position_;
+} PositionRecord;
+
 typedef struct {
 	char *txBuffer_; 
 	char *rxBuffer_;
@@ -139,7 +145,7 @@ typedef struct {
 	size_t tcpTxBlock_; 
 	
 	Imei imei_; 
-	//PositionRecord positionRecord_;
+	PositionRecord positionRecord_;
 	
 } Simcom;
 
