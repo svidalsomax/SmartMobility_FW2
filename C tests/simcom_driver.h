@@ -191,6 +191,12 @@ void Simcom_tcpSend(Simcom * simcom, char * buffer);
 
 char * Simcom_tcpReceive(Simcom * simcom);
 
+char * Simcom_tcpTxBuffer(Simcom * simcom);
+
+char * Simcom_tcpRxBuffer(Simcom * simcom);
+
+void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsigned long wait, unsigned long errorWait);
+
 void Simcom_nextState(Simcom * simcom, Simcom_State state);
 
 void Simcom_setTimer(Simcom * simcom, unsigned long wait);

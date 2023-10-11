@@ -210,11 +210,30 @@ char * Simcom_tcpReceive(Simcom * simcom){
     return buffer;
 }
 
+char * Simcom_tcpTxBuffer(Simcom * simcom){
+    return simcom->tcpTxBuffer_;
+}
 
+char * Simcom_tcpRxBuffer(Simcom * simcom){
+    return simcom->tcpRxBuffer_;
+}
 
+void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsigned long wait, unsigned long errorWait){
+    // unsigned long t = millis(); cambiar millis por calendar de microchip
+    unsigned long t = 123456789; 
 
+    if(!simcom->attempt_ || (simcom->lastRequest_ && (t - simcom->lastRequest_ > wait)) || (simcom->lastError_ && (t - simcom->lastError_ > errorWait))){
+        if(simcom->attempt_ < maxAttempt){
+            simcom->attempt_++;
+            simcom->lastError_ = 0; 
+            strcpy(simcom->txBuffer_,command); 
+        }
+        else {
+            //throw exception(command)
+        }
+    }
 
-
+}
 
 
 void Simcom_nextState(Simcom * simcom, Simcom_State state){
