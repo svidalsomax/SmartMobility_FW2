@@ -71,6 +71,7 @@ typedef struct{
 
 int ble_init(void);
 void ble_send(char* command);
+void ble_read(char * response);
 void ble_send_and_receive(char* command, char* response);
 
 /******************************************************************************

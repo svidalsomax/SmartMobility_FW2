@@ -463,10 +463,10 @@ int main(void)
 	//inicializa el calendario y por lo tanto el timestamp para todo el programa
 	CALENDAR_0_example(); 
 	
-	//esto es como el getble inicial, después se referencia al struct ble a todo
-	ble_setTimer(TIME_TO_DELAY_BLE, &ble);
-	ble.tryCounter_ = 0; 
-	ble.tryCounter_ ++; 
+	//esto es como el getble inicial, después se referencia al struct ble a todo. Acá hubo problemas para inciar el ble, parece que mejor se tiene que hacer una función de Ble_Struct_init_ o algo así- 
+	//ble_setTimer(TIME_TO_DELAY_BLE, &ble);
+	//ble.tryCounter_ = 0; 
+	//ble.tryCounter_ ++; 
 
 	
 	while (1) {
@@ -475,27 +475,17 @@ int main(void)
 			gpio_set_pin_level(LED0, false);
 			gpio_set_pin_level(LED1, false);
 			gpio_set_pin_level(LED2, false);
-			usb_read_routine();
-			ble_process(&ble);
+			usb_read_routine();		
 			
-			//char timer_str[20] = {0};
-			//sprintf(timer_str, "%lu", ble.timer_);
-			usb_serial_write("\n", strlen("\n"));
-			delay_ms(10);
-			//usb_serial_write(timer_str, strlen(timer_str));
-			//delay_ms(10);
-			usb_serial_write(ble.response_, strlen(ble.response_));
-			delay_ms(10);
 			
-			char tryCounter_str[20];
-			sprintf(tryCounter_str, "%d", (int )ble.tryCounter_);
-			usb_serial_write(tryCounter_str, strlen(tryCounter_str));
-			delay_ms(20); 
+			usb_serialPrint("Hola mundo \n");
 			
-			char * ble_state_str = {0}; 
-			sprintf(ble_state_str, "%d", (char)ble.state_);
-			usb_serial_write(ble_state_str, strlen(ble_state_str));
-
+			//ble_process(&ble); 	
+			
+			
+			
+			
+				
 			delay_ms(3000);  //revisar precisión haciendo aún más corto el while
 		}
 		else

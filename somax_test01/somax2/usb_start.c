@@ -256,3 +256,8 @@ int32_t usb_serial_write (const char *const user_output_buffer, const uint16_t u
 {
     return cdc_write(user_output_buffer, user_output_buffer_length);
 }
+
+void usb_serialPrint(const char *const user_output_buffer){
+	usb_serial_write(user_output_buffer, strlen(user_output_buffer)); 
+	delay_ms(10);
+}

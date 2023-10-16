@@ -182,9 +182,9 @@ main.d main.o: .././main.c ../atmel_start.h ../driver_init.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\_pthreadtypes.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\machine\types.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\stdio.h \
- .././ble_driver.h ../atmel_start_pins.h ../driver_init.h \
- .././simcom_driver.h .././imu_driver.h .././fram_driver.h \
- .././spi_can_driver.h ../examples/driver_examples.h
+ .././ble_driver.h ../atmel_start_pins.h ../driver_init.h ../usb_start.h \
+ .././simcom_driver.h .././Imei.h .././Position.h .././imu_driver.h \
+ .././fram_driver.h .././spi_can_driver.h ../examples/driver_examples.h
 
 ../atmel_start.h:
 
@@ -674,7 +674,13 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 
 ../driver_init.h:
 
+../usb_start.h:
+
 .././simcom_driver.h:
+
+.././Imei.h:
+
+.././Position.h:
 
 .././imu_driver.h:
 

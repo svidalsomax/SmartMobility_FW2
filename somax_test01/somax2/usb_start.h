@@ -26,6 +26,8 @@ int32_t usb_serial_read (char *const input_buffer, const uint16_t input_buffer_l
 
 int32_t usb_serial_write (const char *const output_buffer, const uint16_t output_buffer_length);
 
+void usb_serialPrint(const char *const user_output_buffer);
+
 /**
  * \berif Initialize USB
  */

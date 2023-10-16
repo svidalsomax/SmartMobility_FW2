@@ -20,6 +20,7 @@
 #include "Imei.h"
 #include "Position.h"
 
+#define DEBUG_SIM
 
 int simcom_init(void);
 void simcom_send(char* command);
@@ -31,38 +32,38 @@ void simcom_receive(char* response);
 ******************************************************************************/
 
 typedef enum{
-	cancel,
-	creset,
-	ate0,
-	cmee,
-	// cgpshot,
-	// cgpsclose,
-	cgps,
-	simei,
-	stk,
-	cnvw,
-	cgatt,
-	cgsockcont,
-	cgauth,
-	csocksetpn,
-	ciptimeout,
-	cgpsinfo,
-	cipsendmode,
-	ciptcpfin,
-	netopen,
-	ipaddr,
-	wait,
-	cipopen,
-	cipsend0,
-	cipsend1,
-	cipsend2,
-	cipsend3,
-	cipstat,
-	cipclose,
-	netclose,
-	gpsoff,
-	gpson,
-	end
+	simcom_state_cancel,
+	simcom_state_creset,
+	simcom_state_ate0,
+	simcom_state_cmee,
+	// simcom_state_cgpshot,
+	// simcom_state_cgpsclose,
+	simcom_state_cgps,
+	simcom_state_simei,
+	simcom_state_stk,
+	simcom_state_cnvw,
+	simcom_state_cgatt,
+	simcom_state_cgsockcont,
+	simcom_state_cgauth,
+	simcom_state_csocksetpn,
+	simcom_state_ciptimeout,
+	simcom_state_cgpsinfo,
+	simcom_state_cipsendmode,
+	simcom_state_ciptcpfin,
+	simcom_state_netopen,
+	simcom_state_ipaddr,
+	simcom_state_wait,
+	simcom_state_cipopen,
+	simcom_state_cipsend0,
+	simcom_state_cipsend1,
+	simcom_state_cipsend2,
+	simcom_state_cipsend3,
+	simcom_state_cipstat,
+	simcom_state_cipclose,
+	simcom_state_netclose,
+	simcom_state_gpsoff,
+	simcom_state_gpson,
+	simcom_state_end
 } Simcom_State;
 
 typedef enum {
@@ -104,14 +105,14 @@ typedef struct {
 } PositionRecord;
 
 typedef struct {
-	char *txBuffer_; 
-	char *rxBuffer_;
+	char txBuffer_[100]; 
+	char rxBuffer_[100];
 	
 	Simcom_State state_; 
-	bool otaMode; 
+	bool otaMode_; 
 	bool gpsState; 
 	unsigned attempt_; 
-	unsigned connection; 
+	unsigned connection_; 
 	
 	unsigned long startDelay_;
 	unsigned long lastRequest_;
@@ -150,7 +151,71 @@ typedef struct {
 } Simcom;
 
 
+/******************************************************************************
+**  FUNCIONES SOMAX
+******************************************************************************/
+void getIntegers(const char *buffer, int *integers, int *count);
 
+void Simcom_init(Simcom * simcom );
 
+void Simcom_setStartDelay(Simcom * simcom, unsigned long startDelay);
+
+void Simcom_setApn(Simcom * simcom, char * apn, char * user, char * password);
+
+void Simcom_setTimeouts(Simcom * simcom, unsigned long netTimeout, unsigned long openTimeout, unsigned long sendTimeout);
+
+void Simcom_setServer(Simcom * simcom, char * serverIp, unsigned serverPort);
+
+void Simcom_setPositionDelay(Simcom * simcom, unsigned positionDelay);
+
+Simcom_State Simcom_state(Simcom * simcom);
+
+unsigned Simcom_connection(Simcom * simcom);
+
+unsigned long Simcom_lastReset(Simcom * simcom);
+
+unsigned long Simcom_lastOnline(Simcom * simcom);
+
+unsigned long Simcom_lastTransmission(Simcom * simcom);
+
+Imei Simcom_imei(Simcom * simcom);
+
+PositionRecord Simcom_positionRecord(Simcom * simcom);
+
+unsigned long Simcom_tDataRxSize(Simcom * simcom);
+
+unsigned long Simcom_tDataTxSize(Simcom * simcom);
+
+void Simcom_closeConnection(Simcom * simcom);
+
+void Simcom_setConnection(Simcom * simcom);
+
+char * Simcom_IPaddress(Simcom * simcom);
+
+void Simcom_setOtaMode(Simcom * simcom);
+
+void Simcom_clearOtaMode(Simcom * simcom);
+
+void Simcom_process(Simcom * simcom);
+
+void Simcom_reset(Simcom * simcom);
+
+void Simcom_netclose(Simcom * simcom);
+
+void Simcom_tcpSend(Simcom * simcom, char * buffer);
+
+char * Simcom_tcpReceive(Simcom * simcom);
+
+char * Simcom_tcpTxBuffer(Simcom * simcom);
+
+char * Simcom_tcpRxBuffer(Simcom * simcom);
+
+void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsigned long wait, unsigned long errorWait);
+
+void Simcom_nextState(Simcom * simcom, Simcom_State state);
+
+void Simcom_setTimer(Simcom * simcom, unsigned long wait);
+
+bool Simcom_timer(Simcom * simcom);
 
 #endif /* SIMCOM_DRIVER_H_ */

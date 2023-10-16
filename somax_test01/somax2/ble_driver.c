@@ -40,6 +40,13 @@ void ble_send(char* command)
 	strcpy(at_cmd, "");
 	strcat(at_cmd, command);
 	io_write(ble_io, (uint8_t *)at_cmd, strlen(at_cmd));
+	delay_ms(TIME_TO_DELAY);
+}
+
+void ble_read(char * response)
+{
+	io_read(ble_io, (uint8_t *)response, MAX_MESSAGE_LENGTH);
+	delay_ms(TIME_TO_DELAY);
 }
 
 void ble_send_and_receive(char* command, char* response)
@@ -61,17 +68,22 @@ void ble_send_and_receive(char* command, char* response)
 uint32_t ble_millis_ = 0; 
 
 void ble_process(Ble *ble){
-
-	io_read(ble_io, (uint8_t *)ble->rxBuffer_, MAX_MESSAGE_LENGTH);
+	ble_read(ble->rxBuffer_);	
+		
 	char buffer[MAX_MESSAGE_LENGTH];
 	
-	switch ((*ble).bleState_) //definir el blestate_
+	switch ((*ble).bleState_)
 	{
 		case BLE_BEGIN:
 		{
 			strcpy(buffer, "AT");
+			//usb_serial_write("STATE: BLE_BEGIN \n", strlen("STATE: BLE_BEGIN \n"));
+			
+			//delay_ms(10);
 			
 			if (ble_timer(ble)){
+				usb_serial_write("TIMER BLE_BEGIN \n", strlen("TIMER BLE_BEGIN \n"));
+				delay_ms(10);
 				ble_retry(BLE_RENEW, ble, buffer);	
 			}
 			
@@ -80,8 +92,12 @@ void ble_process(Ble *ble){
 		case BLE_RENEW:
 		{
 			strcpy(buffer, "AT+RENEW");
-			
+			//usb_serial_write("STATE: BLE_RENEW \n", strlen("STATE: BLE_RENEW \n"));
+			//delay_ms(10);
+						
 			if (ble_timer(ble)){
+				//usb_serial_write("TIMER BLE_RENEW\n", strlen("TIMER BLE _RENEW\n"));
+				//delay_ms(10);
 				ble_retry(BLE_ROLE, ble, buffer);
 			}
 			
@@ -90,7 +106,9 @@ void ble_process(Ble *ble){
 		case BLE_ROLE:
 		{
 			strcpy(buffer, "AT+ROLE1");
-			
+			//usb_serial_write("BLE_STATE: BLE_ROLE \n", strlen("BLE_STATE: BLE_ROLE \n"));
+			//delay_ms(10);
+						
 			if (ble_timer(ble)){
 				ble_retry(BLE_IMME, ble, buffer);
 			}
@@ -100,7 +118,9 @@ void ble_process(Ble *ble){
 		case BLE_IMME:
 		{
 			strcpy(buffer, "AT+IMME1");
-			
+			//usb_serial_write("BLE_STATE: BLE_IMME \n", strlen("BLE_STATE: BLE_IMME \n"));
+			//delay_ms(10);
+						
 			if (ble_timer(ble)){
 				ble_retry(BLE_RESET, ble, buffer);	
 			}
@@ -111,7 +131,8 @@ void ble_process(Ble *ble){
 		{
 			strcpy(buffer, "AT+RESET");
 			// if timer
-			
+			//usb_serial_write("BLE_STATE: BLE_RESET \n", strlen("BLE_STATE: BLE_RESET \n"));
+			//delay_ms(10);			
 			if (ble_timer(ble)){
 				ble->tryCounter_ = (ble->tryCounter_ == 0) ? ble->tryCounter_+1:ble->tryCounter_ ;
 				ble_retry(BLE_PROCESS, ble, buffer);				
@@ -121,6 +142,8 @@ void ble_process(Ble *ble){
 		}
 		case BLE_PROCESS:
 		{
+			//usb_serial_write("BLE_STATE: BLE_PROCESS \n", strlen("BLE_STATE: BLE_PROCESS \n"));
+			//delay_ms(10);			
 			if(!ble->state_){
 				strcpy(ble->txBuffer_,"AT+DISI?");
 				ble->state_=1;
@@ -145,11 +168,11 @@ void ble_process(Ble *ble){
 			break; 			
 		}
 	}
-	
+		
 	//si el txBuffer_ no está vacío, envíar el buffer
 	if(!(ble->txBuffer_[0]=='\0')){  
 		//ble_send_and_receive(ble->txBuffer_, ble->response_);
-		io_write(ble_io, (uint8_t *)ble->txBuffer_, strlen(ble->txBuffer_));
+		ble_send(ble->txBuffer_);
 		ble->scanTime_ =0;
 	}
 
@@ -304,6 +327,15 @@ bool ble_timer(Ble *ble)
 }
 
 void ble_setTimer(unsigned long t, Ble *ble){
+	//usb_serial_write(" \n /// BLE SET TIMER /// \n", strlen(" \n /// BLE SET TIMER /// \n"));
+	//delay_ms(10);
+	//char calendar_str[20];
+	//sprintf(calendar_str, "%lu", _calendar_get_counter(&CALENDAR_0.device));
+	//usb_serial_write(calendar_str, strlen(calendar_str));
+	//delay_ms(10);
+	//usb_serial_write("\n", strlen("\n"));
+	//delay_ms(10);
+	
 	(*ble).time_ = _calendar_get_counter(&CALENDAR_0.device);// some like millis()
 	(*ble).timer_ = t;
 }
@@ -311,9 +343,9 @@ void ble_setTimer(unsigned long t, Ble *ble){
 void ble_retry(bleStatus state, Ble *ble, char *buffer){
 
 	if (ble->tryCounter_ < 2){
-		io_write(ble_io, (uint8_t *)buffer, strlen(buffer));
+		ble_send(buffer);		
 		ble->tryCounter_ ++; 
-		ble_setTimer(TIME_TO_DELAY, ble);
+		ble_setTimer(TIME_TO_DELAY_BLE, ble);
 	} else {
 		ble->bleState_ = state; 
 		ble->tryCounter_ = 0; 

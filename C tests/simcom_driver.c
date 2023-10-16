@@ -245,7 +245,7 @@ void Simcom_nextState(Simcom * simcom, Simcom_State state){
 
 
 
-
+//-------------se van rellenando funciones por acá?? 
 
 
 
