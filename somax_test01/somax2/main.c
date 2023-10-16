@@ -398,6 +398,7 @@ uint8_t initial_check(void )
 //CAMBIO PARA PROBAR SUBIDA A GIT.
 
 Ble ble = {0};
+Simcom simcom = {0};
 
 int main(void)
 {
@@ -467,6 +468,8 @@ int main(void)
 	//ble_setTimer(TIME_TO_DELAY_BLE, &ble);
 	//ble.tryCounter_ = 0; 
 	//ble.tryCounter_ ++; 
+	
+	Simcom_struct_init(&simcom); 
 
 	
 	while (1) {
@@ -478,9 +481,11 @@ int main(void)
 			usb_read_routine();		
 			
 			
-			usb_serialPrint("Hola mundo \n");
+			usb_serialPrint("\n --- WHILE 1 --- \n");
 			
-			//ble_process(&ble); 	
+			//ble_process(&ble);
+			
+			Simcom_process(&simcom);  	
 			
 			
 			

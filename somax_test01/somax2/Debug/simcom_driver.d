@@ -165,7 +165,11 @@ simcom_driver.d simcom_driver.o: .././simcom_driver.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\cdefs.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\xlocale.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\string.h \
- .././Imei.h .././Position.h \
+ .././usb_start.h ../usb/class/cdc/device/cdcdf_acm.h \
+ ../usb/device/usbdc.h ../usb/usb_includes.h ../usb/usb_protocol.h \
+ ../usb/usb_includes.h ../Config/usbd_config.h \
+ ../usb/class/cdc/usb_protocol_cdc.h \
+ ../usb/class/cdc/device/cdcdf_acm_desc.h .././Imei.h .././Position.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\ctype.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\stdlib.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\machine\stdlib.h \
@@ -610,6 +614,24 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\xlocale.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\string.h:
+
+.././usb_start.h:
+
+../usb/class/cdc/device/cdcdf_acm.h:
+
+../usb/device/usbdc.h:
+
+../usb/usb_includes.h:
+
+../usb/usb_protocol.h:
+
+../usb/usb_includes.h:
+
+../Config/usbd_config.h:
+
+../usb/class/cdc/usb_protocol_cdc.h:
+
+../usb/class/cdc/device/cdcdf_acm_desc.h:
 
 .././Imei.h:
 

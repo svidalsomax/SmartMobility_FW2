@@ -21,13 +21,14 @@ static struct io_descriptor *simcom_io;
 static void tx_cb_USART_1(const struct usart_async_descriptor *const io_descr)
 {
 	/* Transfer completed */
-	usb_serial_write("Tx completed\n", strlen("Tx completed\n"));
+	
+	//usb_serial_write("Tx completed\n", strlen("Tx completed\n"));
 }
 
 static void rx_cb_USART_1(const struct usart_async_descriptor *const io_descr)
 {
 	/* Transfer completed */
-	usb_serial_write("Rx completed\n", strlen("Rx completed\n"));
+	//usb_serial_write("Rx completed\n", strlen("Rx completed\n"));
 }
 
 int simcom_init(void)
@@ -114,7 +115,7 @@ void getIntegers(const char *buffer, int *integers, int *count) {
 	}
 }
 
-void Simcom_init(Simcom * simcom ){
+void Simcom_struct_init(Simcom * simcom ){
 	simcom->state_ = simcom_state_cancel;
 	simcom->otaMode_ = false;
 	simcom->attempt_ = 0;
@@ -224,17 +225,13 @@ void Simcom_clearOtaMode(Simcom * simcom){
 }
 
 void Simcom_process(Simcom * simcom){
-    //printf("entro al process \n");
-    char * buffer; 
+    char buffer[64] = {0}; 
 	simcom_receive(buffer);
 	strcat(simcom->rxBuffer_ , buffer);
-	
-    //printf("se asigno buffer del process: %s \n", buffer);
-    //
-    //printf("despues de strcat, rxBuffer_ : %s \n", simcom->rxBuffer_);
 
     #ifdef DEBUG_SIM
-        usb_serialPrint(buffer); 
+        //usb_serialPrint(buffer); 
+		usb_serialPrint(buffer);
     #endif
 
     switch (simcom->state_)
@@ -242,15 +239,25 @@ void Simcom_process(Simcom * simcom){
     case simcom_state_cancel:
         
         // FALTAN FUNCIONES AÚN PARA QUE FUNCINE EL PROCESS DE SIMCOM
-        /*
-        request("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT\r", 30, 200, 0);
-        setTimer(startDelay_);
-        processResponse(State::creset);*/
+		usb_serialPrint("SIMCOM_STATE: CANCEL \n");
+        Simcom_request(simcom,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT\r", 30, 200, 0);
+        Simcom_setTimer(simcom, simcom->startDelay_);
+        //processResponse(State::creset);
         break;
-    
     default:
         break;
     }
+	
+	//si el txBuffer_ no está vacío, envíar el buffer
+	if(!(simcom->txBuffer_[0]=='\0')){
+		simcom_send(simcom->txBuffer_);
+		simcom->lastRequest_=0;
+	}
+
+	//si el txBuffer_ está vacío y lastRequest existe, actualizar scanTime_ del ble.
+	if(simcom->txBuffer_[0] == '\0' && !simcom->lastRequest_){
+		simcom->lastRequest_=_calendar_get_counter(&CALENDAR_0.device);
+	}	
 
 }
 
@@ -288,8 +295,10 @@ char * Simcom_tcpRxBuffer(Simcom * simcom){
 }
 
 void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsigned long wait, unsigned long errorWait){
-	// unsigned long t = millis(); cambiar millis por calendar de microchip
-	unsigned long t = 123456789;
+	unsigned long t = _calendar_get_counter(&CALENDAR_0.device);// some like millis()
+	//unsigned long t = 123456789;
+	
+	usb_serialPrint("SIMCOM REQUEST");
 
 	if(!simcom->attempt_ || (simcom->lastRequest_ && (t - simcom->lastRequest_ > wait)) || (simcom->lastError_ && (t - simcom->lastError_ > errorWait))){
 		if(simcom->attempt_ < maxAttempt){
@@ -303,6 +312,40 @@ void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsign
 	}
 
 }
+
+
+//acá va el processResponse que veré después. Primero vamos con el lexer. 
+
+Token Simcom_lexer(Simcom * simcom){
+	Token token = {0}; 
+    unsigned nInteger = 0;
+    unsigned offset = 0;
+	
+	if ((simcom->rxBuffer_[0] != '\0') && (simcom->rxBuffer_[0] == '>')){
+		token.name_ = Token_Name_sendPrompt;
+		token.value_ = ">"; 
+	}
+	else
+	{
+		char *substr = strstr(simcom->rxBuffer_, "\r\n"); //puntero al final del rxbuffer
+		
+		if (substr != NULL)	{
+			token.value_ = simcom->rxBuffer_;
+			if (token.value_[0] == '\0'){
+				token.name_ = Token_Name_empty;
+			}
+			else{
+				token.name_ = Token_Name_notReady;
+			}
+		}
+		else
+		{
+			size_t index = substr - simcom->rxBuffer_; //calcular el indice de donde esta \r\n restando posiciones de memoria
+			// viene la linea 733 de simcom.cpp
+		}
+	}
+}
+
 
 
 void Simcom_nextState(Simcom * simcom, Simcom_State state){
@@ -319,10 +362,10 @@ void Simcom_nextState(Simcom * simcom, Simcom_State state){
 
 
 void Simcom_setTimer(Simcom * simcom, unsigned long wait){
-	// simcom->timer_ = millis() + wait; cambiar el millis por la función de microchip
+	simcom->timer_ = _calendar_get_counter(&CALENDAR_0.device) + wait; //cambiar el millis por la función de microchip
+	
 }
 
 bool Simcom_timer(Simcom * simcom){
-	// return millis() > simcom->timer_; cambiar millis por la función de microchip
-	return false;
+	return _calendar_get_counter(&CALENDAR_0.device) > simcom->timer_; //cambiar millis por la función de microchip
 }

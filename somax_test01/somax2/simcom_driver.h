@@ -17,6 +17,8 @@
 #include <driver_init.h>
 #include <string.h>
 
+#include "usb_start.h"
+
 #include "Imei.h"
 #include "Position.h"
 
@@ -91,12 +93,12 @@ typedef enum {
 } Token_Name;
 
 typedef struct {
-	Token_Name name_; 	
-	char* value_ ; 
-	char* message_ ; 
-	int array_[3]; 
-	Imei imei_; 
-	Position position_; 
+	Token_Name name_;
+	char* value_ ;
+	char* message_ ;
+	int array_[3];
+	Imei imei_;
+	Position position_;
 } Token;
 	
 typedef struct {
@@ -156,7 +158,7 @@ typedef struct {
 ******************************************************************************/
 void getIntegers(const char *buffer, int *integers, int *count);
 
-void Simcom_init(Simcom * simcom );
+void Simcom_struct_init(Simcom * simcom );
 
 void Simcom_setStartDelay(Simcom * simcom, unsigned long startDelay);
 
@@ -211,6 +213,8 @@ char * Simcom_tcpTxBuffer(Simcom * simcom);
 char * Simcom_tcpRxBuffer(Simcom * simcom);
 
 void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsigned long wait, unsigned long errorWait);
+
+Token Simcom_lexer(Simcom * simcom);
 
 void Simcom_nextState(Simcom * simcom, Simcom_State state);
 
