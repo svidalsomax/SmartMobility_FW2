@@ -242,7 +242,7 @@ void Simcom_process(Simcom * simcom){
 		usb_serialPrint("SIMCOM_STATE: CANCEL \n");
         Simcom_request(simcom,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT\r", 30, 200, 0);
         Simcom_setTimer(simcom, simcom->startDelay_);
-        //processResponse(State::creset);
+        Simcom_processResponse(simcom, simcom_state_creset);
         break;
     default:
         break;
@@ -308,6 +308,7 @@ void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsign
 		}
 		else {
 			//throw exception(command)
+			usb_serialPrint("ERROR EN SIMCOM_request");
 		}
 	}
 
@@ -315,22 +316,51 @@ void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsign
 
 
 //acá va el processResponse que veré después. Primero vamos con el lexer. 
+void Simcom_processResponse(Simcom * simcom, Simcom_State state){	 
+	Token_Name success = Token_Name_ok;
+	Token_Name error = Token_Name_error; 
+	
+	while(1){
+		usb_serialPrint("\nWhile 1 - processResponse que nunca se acaba \n");
+		Token token = Simcom_lexer(simcom);
+		usb_serialPrint("salgo del simcom lexer");
+		if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
+			break; 
+		}else if(token.name_ == success){
+			Simcom_nextState(simcom, state);
+		}else if(token.name_ == error){
+			Simcom_retry(simcom); 
+		} else {
+			// ACÁ PENDIENTE SEGUIR CON EL SIMCOM_ASYNC, NO ES TAN LARGO PERO ESTÁ LATERO
+			// Simcom_async(token); 
+		}
+	}
+}
+
 
 Token Simcom_lexer(Simcom * simcom){
+	usb_serialPrint("simcom_lexer | entro al Simcom_lexer \n");
 	Token token = {0}; 
     unsigned nInteger = 0;
     unsigned offset = 0;
-	
+	usb_serialPrint("simcom_lexer | RxBuffer: ");
+	usb_serialPrint(simcom->rxBuffer_);
+	usb_serialPrint("\n");
 	if ((simcom->rxBuffer_[0] != '\0') && (simcom->rxBuffer_[0] == '>')){
 		token.name_ = Token_Name_sendPrompt;
-		token.value_ = ">"; 
+		strcpy(token.value_ ,">");
+		token.value_[2]='\0';
 	}
 	else
 	{
 		char *substr = strstr(simcom->rxBuffer_, "\r\n"); //puntero al final del rxbuffer
-		
-		if (substr != NULL)	{
-			token.value_ = simcom->rxBuffer_;
+		usb_serialPrint("simcom_lexer | substr"); 
+		usb_serialPrint(substr);
+		usb_serialPrint("\n");
+		if (substr == NULL)	{
+			usb_serialPrint("simcom_lexer | substr else == NULL");
+			usb_serialPrint("\n");		
+			strcpy(token.value_, simcom->rxBuffer_);
 			if (token.value_[0] == '\0'){
 				token.name_ = Token_Name_empty;
 			}
@@ -340,10 +370,24 @@ Token Simcom_lexer(Simcom * simcom){
 		}
 		else
 		{
+			usb_serialPrint("simcom_lexer | substr else != NULL");
+			usb_serialPrint("\n");
 			size_t index = substr - simcom->rxBuffer_; //calcular el indice de donde esta \r\n restando posiciones de memoria
-			// viene la linea 733 de simcom.cpp
+			// viene la linea 744 de simcom.cpp 
+			strncpy(token.value_,simcom->rxBuffer_,index + 2); //index + 2 es el largo de la subcadena del  rxbuffer que se copará a token.value_. Por alguna razón en el fw antiguo se hace una copia de la cadena rxBuffer al token.value_
+			token.value_[index+2] = '\0';
+			
+			if(token.value_ == blank){
+				token.name_ = Token_Name_blank;
+			}else if(token.value_ == ok){
+				token.name_ = Token_Name_ok;
+			}else if(strncmp(token.value_, cipstat, sizeof(cipstat))==0){
+				token.name_ = Token_Name_cipstat;
+			}
 		}
+			
 	}
+	return token;
 }
 
 
@@ -355,7 +399,9 @@ void Simcom_nextState(Simcom * simcom, Simcom_State state){
 	simcom->attempt_ = 0;
 }
 
-
+void Simcom_retry(Simcom * simcom){
+	simcom->lastError_ = _calendar_get_counter(&CALENDAR_0.device);
+}
 
 //-------------se van rellenando funciones por acá?? 
 

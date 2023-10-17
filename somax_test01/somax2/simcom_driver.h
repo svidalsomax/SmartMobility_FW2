@@ -16,6 +16,7 @@
 #include <hal_usart_async.h>
 #include <driver_init.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "usb_start.h"
 
@@ -94,7 +95,7 @@ typedef enum {
 
 typedef struct {
 	Token_Name name_;
-	char* value_ ;
+	char value_[100] ;
 	char* message_ ;
 	int array_[3];
 	Imei imei_;
@@ -214,9 +215,13 @@ char * Simcom_tcpRxBuffer(Simcom * simcom);
 
 void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsigned long wait, unsigned long errorWait);
 
+void Simcom_processResponse(Simcom * simcom, Simcom_State state);
+
 Token Simcom_lexer(Simcom * simcom);
 
 void Simcom_nextState(Simcom * simcom, Simcom_State state);
+
+void Simcom_retry(Simcom * simcom);
 
 void Simcom_setTimer(Simcom * simcom, unsigned long wait);
 

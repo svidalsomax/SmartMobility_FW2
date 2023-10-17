@@ -56,6 +56,30 @@ int main() {
 	printf("After process");
 
 
+	strcpy(simcom.rxBuffer_, "Hola mundo loco \r\n");
+
+	char *substr = strstr(simcom.rxBuffer_, "\r\n");
+
+	printf("rx_buffer es: %s", simcom.rxBuffer_);
+
+	printf("substr es: %s \n", substr);
+
+	size_t index = substr - simcom.rxBuffer_;
+
+	printf("index: %zu \n", index);
+
+	char token_value[100];
+	
+	strncpy(token_value, simcom.rxBuffer_, index+2);
+	token_value[index + 2] = '\0';
+
+	printf("token_value: %s \n", token_value);
+
+
+	char s1[]= "123456789";
+	printf("s1[]: %s \n", s1); 
+	printf("s1[] +3: %s \n", s1+3); 
+
 	//strcpy(ble.state_, "hola");
 	//ble_set_timer(TIME_TO_DELAY, &ble);
 

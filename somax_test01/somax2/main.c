@@ -351,6 +351,7 @@ uint8_t initial_check(void )
 	delay_ms(10);
 	
 	// Check Simcom comm
+	
 	char respsim[64] = {0};
 	simcom_send_and_receive("AT\r", respsim);
 	delay_ms(10000);
@@ -366,6 +367,7 @@ uint8_t initial_check(void )
 	status.bits.sim = (strncmp(respsim2, "\rOK", 1) == 0);
 	errorcount += !status.bits.sim;
 	delay_ms(10);
+	
 	
 	// Check acc comm
 	char acc_who_am_i = IMU_readRegister(0x0F);
