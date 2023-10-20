@@ -124,10 +124,6 @@ int loadRaw(Position * position, char * position_string){
         }
 
         position->longitude_= sign * (degrees + minutes / 60.);
-
-        //printf("%s \n", minutes_str);
-        //printf("%f \n", position->longitude_);
-        //printf("%f \n", position->latitude_);
     }
 }
 

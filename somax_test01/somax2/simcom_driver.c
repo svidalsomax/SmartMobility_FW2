@@ -244,7 +244,10 @@ void Simcom_process(Simcom * simcom){
         Simcom_setTimer(simcom, simcom->startDelay_);
         Simcom_processResponse(simcom, simcom_state_creset);
         break;
+	case simcom_state_creset:
+		usb_serialPrint("SIMCOM_STATE: RESET\n");
     default:
+		usb_serialPrint("SIMCOM_STATE: DEFAULT \n");
         break;
     }
 	
@@ -298,13 +301,16 @@ void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsign
 	unsigned long t = _calendar_get_counter(&CALENDAR_0.device);// some like millis()
 	//unsigned long t = 123456789;
 	
-	usb_serialPrint("SIMCOM REQUEST");
+	usb_serialPrint("SIMCOM REQUEST\n");
 
-	if(!simcom->attempt_ || (simcom->lastRequest_ && (t - simcom->lastRequest_ > wait)) || (simcom->lastError_ && (t - simcom->lastError_ > errorWait))){
-		if(simcom->attempt_ < maxAttempt){
+	if(!simcom->attempt_ || (simcom->lastRequest_ && (t - simcom->lastRequest_ > wait)) || (simcom->lastError_ && (t - simcom->lastError_ > errorWait)))
+	{	
+		if(simcom->attempt_ < maxAttempt)
+		{	
 			simcom->attempt_++;
 			simcom->lastError_ = 0;
 			strcpy(simcom->txBuffer_,command);
+			usb_serialPrint("SIMCOM REQUEST: attempt ++, lasterror = 0, txbuffer = command");			
 		}
 		else {
 			//throw exception(command)
@@ -322,7 +328,7 @@ void Simcom_processResponse(Simcom * simcom, Simcom_State state){
 	
 	while(1){
 		usb_serialPrint("\nWhile 1 - processResponse que nunca se acaba \n");
-		Token token = Simcom_lexer(simcom);
+		Token token = Simcom_lexer(simcom, true);
 		usb_serialPrint("salgo del simcom lexer");
 		if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
 			break; 
@@ -338,14 +344,16 @@ void Simcom_processResponse(Simcom * simcom, Simcom_State state){
 }
 
 
-Token Simcom_lexer(Simcom * simcom){
+Token Simcom_lexer(Simcom * simcom, bool pull){
 	usb_serialPrint("simcom_lexer | entro al Simcom_lexer \n");
 	Token token = {0}; 
     unsigned nInteger = 0;
     unsigned offset = 0;
-	usb_serialPrint("simcom_lexer | RxBuffer: ");
+	
+	//usb_serialPrint("simcom_lexer | RxBuffer: ");
 	usb_serialPrint(simcom->rxBuffer_);
-	usb_serialPrint("\n");
+	//usb_serialPrint("\n");
+	
 	if ((simcom->rxBuffer_[0] != '\0') && (simcom->rxBuffer_[0] == '>')){
 		token.name_ = Token_Name_sendPrompt;
 		strcpy(token.value_ ,">");
@@ -353,11 +361,12 @@ Token Simcom_lexer(Simcom * simcom){
 	}
 	else
 	{
-		char *substr = strstr(simcom->rxBuffer_, "\r\n"); //puntero al final del rxbuffer
-		usb_serialPrint("simcom_lexer | substr"); 
-		usb_serialPrint(substr);
-		usb_serialPrint("\n");
-		if (substr == NULL)	{
+		char rn[2]="\r\n";
+		char *rn_pointer = strstr(simcom->rxBuffer_, rn); //puntero a donde se encuentr \r\n en rxBuffer_
+		usb_serialPrint("simcom_lexer | substr:"); 
+		usb_serialPrint(rn_pointer);
+		//usb_serialPrint("\n");
+		if (rn_pointer == NULL)	{
 			usb_serialPrint("simcom_lexer | substr else == NULL");
 			usb_serialPrint("\n");		
 			strcpy(token.value_, simcom->rxBuffer_);
@@ -372,10 +381,16 @@ Token Simcom_lexer(Simcom * simcom){
 		{
 			usb_serialPrint("simcom_lexer | substr else != NULL");
 			usb_serialPrint("\n");
-			size_t index = substr - simcom->rxBuffer_; //calcular el indice de donde esta \r\n restando posiciones de memoria
-			// viene la linea 744 de simcom.cpp 
-			strncpy(token.value_,simcom->rxBuffer_,index + 2); //index + 2 es el largo de la subcadena del  rxbuffer que se copará a token.value_. Por alguna razón en el fw antiguo se hace una copia de la cadena rxBuffer al token.value_
+			size_t index = rn_pointer - simcom->rxBuffer_; //calcular el indice de donde esta \r\n restando posiciones de memoria
+			
+			//744 de simcom cpp:
+			
+			strncpy(token.value_,simcom->rxBuffer_,index + 2); //index + 2 es el largo de la subcadena del  rxbuffer que se copará a token.value_.
 			token.value_[index+2] = '\0';
+			
+			usb_serialPrint("simcom_lexer | token.value_:");
+			usb_serialPrint(token.value_);
+			usb_serialPrint("\n");
 			
 			if(token.value_ == blank){
 				token.name_ = Token_Name_blank;
@@ -383,10 +398,81 @@ Token Simcom_lexer(Simcom * simcom){
 				token.name_ = Token_Name_ok;
 			}else if(strncmp(token.value_, cipstat, sizeof(cipstat))==0){
 				token.name_ = Token_Name_cipstat;
+			}else if(strncmp(token.value_, error, sizeof(error)) == 0){
+				token.name_ = Token_Name_error;
+				token.array_[0]=-1;
+			}else if ((strncmp(token.value_, cmeError, sizeof(cmeError)) == 0) || (strncmp(token.value_, cmsError, sizeof(cmsError)) == 0)){
+				token.name_ = Token_Name_error;
+				offset = strlen(cmeError)-1;
+				nInteger = 1;
+			}else if (token.value_ == start){
+				token.name_ = Token_Name_start;
+			}else if (token.value_ == pbDone){
+				token.name_ = Token_Name_pbDone;
+			}else if (strncmp(token.value_, gpsinfo, sizeof(gpsinfo)) == 0){
+				for (int i = 0; (i < 2) && (rn_pointer != NULL); i++)
+				{
+					rn_pointer = strstr(rn_pointer+2 , "\r\n");
+				}
+				if (rn_pointer == NULL)
+				{
+					token.name_ = Token_Name_notReady;
+				}else{
+					index = rn_pointer - simcom->rxBuffer_;	
+					token.name_ = Token_Name_gpsinfo;
+					strncpy(token.value_ ,simcom->rxBuffer_, index);
+					Position_loadRaw(&token.position_, token.value_);
+				}
+			}else if (strncmp(token.value_, simei, sizeof(simei)) == 0){
+				if (strlen(token.value_) == 25)
+				{
+					token.name_ = Token_Name_simei;
+					imei_loadText(&token.imei_,token.value_);
+				}else{
+					token.name_ = Token_Name_unknown;
+				}				
+			}else if(strncmp(token.value_, netopen, sizeof(netopen)) == 0){
+				token.name_ = Token_Name_netopen;
+				offset = sizeof(netopen) - 1;
+				nInteger = 1; 
+			}else if(strncmp(token.value_, ipaddr, sizeof(ipaddr)) == 0){
+				token.name_ = Token_Name_ipaddr;
+				offset = sizeof(ipaddr) - 1;
+				nInteger = 1; 
+			}else if(strncmp(token.value_, cipopen, sizeof(cipopen)) == 0){
+				token.name_ = Token_Name_cipopen;
+				offset = sizeof(cipopen) - 1;
+				nInteger = 2;				
+			}else if(strncmp(token.value_, cipsend, sizeof(cipsend)) == 0){
+				token.name_ = Token_Name_cipsend;
+				offset = sizeof(cipsend) - 1;
+				nInteger = 3;
+			}else if(strncmp(token.value_, cipclose, sizeof(cipclose)) == 0){
+				token.name_ = Token_Name_cipclose;
+				offset = sizeof(cipclose) - 1;
+				nInteger = 2;
+			}else if(strncmp(token.value_, netclose, sizeof(netclose)) == 0){
+				token.name_ = Token_Name_netclose;
+				offset = sizeof(netclose) - 1;
+				nInteger = 1;
+			}else if(strncmp(token.value_, recvFrom, sizeof(recvFrom)) == 0){
+				token.name_ = Token_Name_notReady;
+				if (strlen(simcom->rxBuffer_)>index + 6)
+				{
+					char s[4];
+					
+				}
 			}
 		}
-			
 	}
+	
+	//quitar parte que se analizo del rxBuffer: 
+	if(pull && (token.name_ != Token_Name_notReady)){
+		char * substr_rxBuffer_ = simcom->rxBuffer_ + strlen(token.value_);
+		memmove(simcom->rxBuffer_, substr_rxBuffer_, strlen(substr_rxBuffer_)+1); //rxBuffer toma el valor desde el indice que tiene substr_RxBuffer_
+	}
+	usb_serialPrint("simcom_lexer | rxBuffer despues de memmove: ");
+	usb_serialPrint(simcom->rxBuffer_);
 	return token;
 }
 

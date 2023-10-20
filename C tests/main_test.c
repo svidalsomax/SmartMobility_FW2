@@ -47,39 +47,67 @@ int main() {
 	printf("IP 1: %s \n", simcom.ipaddr_); 
 
 	Simcom_setApn(&simcom, "iot.secure", "", ""); 
-	printf("APN: \n apn: %s \n user: %s \n password: %s \n",simcom.apn_ ,simcom.user_,simcom.password_);
+	//printf("APN: \n apn: %s \n user: %s \n password: %s \n",simcom.apn_ ,simcom.user_,simcom.password_);
 
 	char * buffer2 = Simcom_IPaddress(&simcom); 
-	printf("IP 2: %s \n", buffer2); 
+	//printf("IP 2: %s \n", buffer2); 
 
 	Simcom_process(&simcom);
-	printf("After process");
+	//printf("After process");
 
 
-	strcpy(simcom.rxBuffer_, "Hola mundo loco \r\n");
+	strcpy(simcom.rxBuffer_, "+CGPSINFO: XXXXXX\r\nOK\r\n");
 
-	char *substr = strstr(simcom.rxBuffer_, "\r\n");
+	char *substr = strstr(simcom.rxBuffer_ + 2, "\r\n");
 
 	printf("rx_buffer es: %s", simcom.rxBuffer_);
 
-	printf("substr es: %s \n", substr);
+	char token_value[20];
+
+	strncpy(token_value, simcom.rxBuffer_, 10);
+
+	//printf("token value es: %s", token_value);
 
 	size_t index = substr - simcom.rxBuffer_;
 
-	printf("index: %zu \n", index);
+	for (int i = 0; (i < 2) && (substr != NULL); i++)
+	{
+		substr = strstr(substr+2 , "\r\n");
+		if (substr != NULL)
+		{
+			index = substr - simcom.rxBuffer_;
+			//printf("index: %zu \n", index);
+			//printf("substr es: %s", substr);
+		}else{
+			index = substr - simcom.rxBuffer_;
+			//printf("index NULL?: %zu \n", index);
+			//printf("substr NULL?: %s", substr);
+		}		
+	}
 
-	char token_value[100];
+	//printf("index: %zu \n", index);
+
+	//char token_value[100];
 	
-	strncpy(token_value, simcom.rxBuffer_, index+2);
-	token_value[index + 2] = '\0';
+	//strncpy(token_value, simcom.rxBuffer_, index+2);
+	//token_value[index + 2] = '\0';
 
-	printf("token_value: %s \n", token_value);
+	//printf("token_value: %s \n", token_value);
 
 
 	char s1[]= "123456789";
-	printf("s1[]: %s \n", s1); 
-	printf("s1[] +3: %s \n", s1+3); 
+	char scpy[6]; 
 
+	scpy[5]='\0';
+	strncpy(scpy,s1+3,5);
+
+	printf("s1[]: %s \n", s1); 
+	printf("sscpy[]: %s \n", scpy); 
+
+
+	char * subs1 = s1+strlen(token_value); 
+	memmove(s1, subs1, strlen(substr)+1);
+	//printf("s1[] despues de memmove: %s", s1);
 	//strcpy(ble.state_, "hola");
 	//ble_set_timer(TIME_TO_DELAY, &ble);
 

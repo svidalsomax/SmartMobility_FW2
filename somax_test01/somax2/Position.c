@@ -54,7 +54,7 @@ void Position_Init_Str(Position * position, char * position_string){
 /**
 * \brief Funcion que carga la posición proveniente en cadena de char de la simcom. Toma los campos esperados de la simcom y los transforma a números para guardarlos en los parámetros del objeto.
 */
-int loadRaw(Position * position, char * position_string){
+int Position_loadRaw(Position * position, char * position_string){
 	char begin_position_string [10];
 	strncpy(begin_position_string, position_string, 10);
 	begin_position_string[10] = '\0';

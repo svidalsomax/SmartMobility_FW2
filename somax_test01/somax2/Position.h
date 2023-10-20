@@ -35,7 +35,7 @@ void Position_Init_Coordenate(Position * position, Position * overflow, double l
 void Position_Init_Str(Position * position, char * position_string);
 
 //arreglar esto
-int loadRaw(Position * position, char * position_string);
+int Position_loadRaw(Position * position, char * position_string);
 void binary_position(Position * position, char binary[6]);
 
 bool position_is_equal(Position * position1, Position * position2);

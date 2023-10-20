@@ -217,7 +217,7 @@ void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsign
 
 void Simcom_processResponse(Simcom * simcom, Simcom_State state);
 
-Token Simcom_lexer(Simcom * simcom);
+Token Simcom_lexer(Simcom * simcom, bool pull);
 
 void Simcom_nextState(Simcom * simcom, Simcom_State state);
 

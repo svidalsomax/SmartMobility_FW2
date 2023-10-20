@@ -159,14 +159,14 @@ void Simcom_clearOtaMode(Simcom * simcom){
 }
 
 void Simcom_process(Simcom * simcom){
-    printf("entro al process \n");
+    //printf("entro al process \n");
     const char * buffer = "buffer_prueba"; 
-    printf("se asigno buffer del process: %s \n", buffer);
+    //printf("se asigno buffer del process: %s \n", buffer);
     strcat(simcom->rxBuffer_ , buffer);
-    printf("despues de strcat, rxBuffer_ : %s \n", simcom->rxBuffer_);
+    //printf("despues de strcat, rxBuffer_ : %s \n", simcom->rxBuffer_);
 
     #ifdef DEBUG_SIM
-        printf("ENTRO A SIMCOM_PROCESS Y SE LEYO BUFFER OK\n");
+        //printf("ENTRO A SIMCOM_PROCESS Y SE LEYO BUFFER OK\n");
     #endif
 
     switch (simcom->state_)
