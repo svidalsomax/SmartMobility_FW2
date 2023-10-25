@@ -230,22 +230,50 @@ void Simcom_process(Simcom * simcom){
 	strcat(simcom->rxBuffer_ , buffer);
 
     #ifdef DEBUG_SIM
-        //usb_serialPrint(buffer); 
+        usb_serialPrint("BUFFER INICIAL PROCESS: "); 
 		usb_serialPrint(buffer);
+		usb_serialPrint("\n");
     #endif
 
     switch (simcom->state_)
     {
     case simcom_state_cancel:
-        
         // FALTAN FUNCIONES AÚN PARA QUE FUNCINE EL PROCESS DE SIMCOM
 		usb_serialPrint("SIMCOM_STATE: CANCEL \n");
+		
         Simcom_request(simcom,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT\r", 30, 200, 0);
         Simcom_setTimer(simcom, simcom->startDelay_);
         Simcom_processResponse(simcom, simcom_state_creset);
         break;
+	
+	//Reset	
 	case simcom_state_creset:
 		usb_serialPrint("SIMCOM_STATE: RESET\n");
+		
+		Simcom_request(simcom, "AT+CRESET\r", 1, 3600000, 0);
+		
+		if(Simcom_timer(simcom)){
+			simcom->rxBuffer_[0]='\0'; //rxBuffer.clear();
+			simcom->lastReset_ = _calendar_get_counter(&CALENDAR_0.device);
+			Simcom_nextState(simcom, simcom_state_ate0);
+		}
+		
+		break;
+		
+	// Echo off 
+	case simcom_state_ate0:
+		usb_serialPrint("SIMCOM_STATE: ATE0\n");
+		
+		#ifdef DEBUG_SIM 
+			Simcom_request(simcom, "ATE1\r", 5, 3000, 1000);
+		#else 
+			Simcom_request(simcom, "ATE0\r", 5, 3000, 1000);
+		#endif
+		
+		Simcom_processResponse(simcom, simcom_state_cmee); 
+
+		break;
+		
     default:
 		usb_serialPrint("SIMCOM_STATE: DEFAULT \n");
         break;
@@ -253,12 +281,15 @@ void Simcom_process(Simcom * simcom){
 	
 	//si el txBuffer_ no está vacío, envíar el buffer
 	if(!(simcom->txBuffer_[0]=='\0')){
+		usb_serialPrint("txbuffer:"); 
+		usb_serialPrint(simcom->txBuffer_);
 		simcom_send(simcom->txBuffer_);
 		simcom->lastRequest_=0;
 	}
 
-	//si el txBuffer_ está vacío y lastRequest existe, actualizar scanTime_ del ble.
+	//si el txBuffer_ está vacío y lastRequest existe, actualizar lastReques_ de la simcom
 	if(simcom->txBuffer_[0] == '\0' && !simcom->lastRequest_){
+		usb_serialPrint("tXBuffer vacio");
 		simcom->lastRequest_=_calendar_get_counter(&CALENDAR_0.device);
 	}	
 
@@ -310,7 +341,9 @@ void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsign
 			simcom->attempt_++;
 			simcom->lastError_ = 0;
 			strcpy(simcom->txBuffer_,command);
-			usb_serialPrint("SIMCOM REQUEST: attempt ++, lasterror = 0, txbuffer = command");			
+			usb_serialPrint("SIMCOM REQUEST: attempt ++, lasterror = 0, txbuffer = ");			
+			usb_serialPrint(command);
+			usb_serialPrint("\n");
 		}
 		else {
 			//throw exception(command)
@@ -329,7 +362,7 @@ void Simcom_processResponse(Simcom * simcom, Simcom_State state){
 	while(1){
 		usb_serialPrint("\nWhile 1 - processResponse que nunca se acaba \n");
 		Token token = Simcom_lexer(simcom, true);
-		usb_serialPrint("salgo del simcom lexer");
+		usb_serialPrint("\n salgo del simcom lexer");
 		if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
 			break; 
 		}else if(token.name_ == success){
@@ -386,22 +419,22 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 			//744 de simcom cpp:
 			
 			strncpy(token.value_,simcom->rxBuffer_,index + 2); //index + 2 es el largo de la subcadena del  rxbuffer que se copará a token.value_.
-			token.value_[index+2] = '\0';
+			token.value_[index+2+1] = '\0';
 			
 			usb_serialPrint("simcom_lexer | token.value_:");
 			usb_serialPrint(token.value_);
 			usb_serialPrint("\n");
 			
-			if(token.value_ == blank){
+			if(strcmp(token.value_,blank)==0){
 				token.name_ = Token_Name_blank;
-			}else if(token.value_ == ok){
+			}else if(strcmp(token.value_,ok)==0){
 				token.name_ = Token_Name_ok;
-			}else if(strncmp(token.value_, cipstat, sizeof(cipstat))==0){
+			}else if(strncmp(token.value_, cipstat, strlen(cipstat))==0){
 				token.name_ = Token_Name_cipstat;
-			}else if(strncmp(token.value_, error, sizeof(error)) == 0){
+			}else if(strncmp(token.value_, error, strlen(error)) == 0){
 				token.name_ = Token_Name_error;
 				token.array_[0]=-1;
-			}else if ((strncmp(token.value_, cmeError, sizeof(cmeError)) == 0) || (strncmp(token.value_, cmsError, sizeof(cmsError)) == 0)){
+			}else if ((strncmp(token.value_, cmeError, strlen(cmeError)) == 0) || (strncmp(token.value_, cmsError, strlen(cmsError)) == 0)){
 				token.name_ = Token_Name_error;
 				offset = strlen(cmeError)-1;
 				nInteger = 1;
@@ -409,7 +442,7 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 				token.name_ = Token_Name_start;
 			}else if (token.value_ == pbDone){
 				token.name_ = Token_Name_pbDone;
-			}else if (strncmp(token.value_, gpsinfo, sizeof(gpsinfo)) == 0){
+			}else if (strncmp(token.value_, gpsinfo, strlen(gpsinfo)) == 0){
 				for (int i = 0; (i < 2) && (rn_pointer != NULL); i++)
 				{
 					rn_pointer = strstr(rn_pointer+2 , "\r\n");
@@ -423,7 +456,7 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 					strncpy(token.value_ ,simcom->rxBuffer_, index);
 					Position_loadRaw(&token.position_, token.value_);
 				}
-			}else if (strncmp(token.value_, simei, sizeof(simei)) == 0){
+			}else if (strncmp(token.value_, simei, strlen(simei)) == 0){
 				if (strlen(token.value_) == 25)
 				{
 					token.name_ = Token_Name_simei;
@@ -431,38 +464,101 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 				}else{
 					token.name_ = Token_Name_unknown;
 				}				
-			}else if(strncmp(token.value_, netopen, sizeof(netopen)) == 0){
+			}else if(strncmp(token.value_, netopen, strlen(netopen)) == 0){
 				token.name_ = Token_Name_netopen;
 				offset = sizeof(netopen) - 1;
 				nInteger = 1; 
-			}else if(strncmp(token.value_, ipaddr, sizeof(ipaddr)) == 0){
+			}else if(strncmp(token.value_, ipaddr, strlen(ipaddr)) == 0){
 				token.name_ = Token_Name_ipaddr;
 				offset = sizeof(ipaddr) - 1;
 				nInteger = 1; 
-			}else if(strncmp(token.value_, cipopen, sizeof(cipopen)) == 0){
+			}else if(strncmp(token.value_, cipopen, strlen(cipopen)) == 0){
 				token.name_ = Token_Name_cipopen;
 				offset = sizeof(cipopen) - 1;
 				nInteger = 2;				
-			}else if(strncmp(token.value_, cipsend, sizeof(cipsend)) == 0){
+			}else if(strncmp(token.value_, cipsend, strlen(cipsend)) == 0){
 				token.name_ = Token_Name_cipsend;
 				offset = sizeof(cipsend) - 1;
 				nInteger = 3;
-			}else if(strncmp(token.value_, cipclose, sizeof(cipclose)) == 0){
+			}else if(strncmp(token.value_, cipclose, strlen(cipclose)) == 0){
 				token.name_ = Token_Name_cipclose;
 				offset = sizeof(cipclose) - 1;
 				nInteger = 2;
-			}else if(strncmp(token.value_, netclose, sizeof(netclose)) == 0){
+			}else if(strncmp(token.value_, netclose, strlen(netclose)) == 0){
 				token.name_ = Token_Name_netclose;
 				offset = sizeof(netclose) - 1;
 				nInteger = 1;
-			}else if(strncmp(token.value_, recvFrom, sizeof(recvFrom)) == 0){
+			}else if(strncmp(token.value_, recvFrom, strlen(recvFrom)) == 0){
 				token.name_ = Token_Name_notReady;
+				
 				if (strlen(simcom->rxBuffer_)>index + 6)
 				{
-					char s[4];
+					char s[5];
+					s[4]='\0';
+					strncpy(s,simcom->rxBuffer_ + index + 6 , 4);
 					
+					size_t length = atoi(s);
+					
+					rn_pointer = strstr(rn_pointer+2 , "\r\n");
+					
+					if (rn_pointer != NULL)
+					{
+						index = rn_pointer - simcom->rxBuffer_;
+						if (length)
+						{
+							index += 2; 
+							if (index + length <= strlen(simcom->rxBuffer_))
+							{
+								token.name_ = Token_Name_recvFrom;
+								
+								strncpy(token.value_,simcom->rxBuffer_,index+length);
+								token.value_[index+length]='\0';
+								
+								strncpy(token.message_,simcom->rxBuffer_ + index,length);
+								token.message_ [length] = '\0';
+							} else {token.name_ = Token_Name_notReady;}
+							
+						} else {token.name_ = Token_Name_unknown;}
+					}
 				}
+			}else if (strncmp(token.value_, ciperror, strlen(ciperror)) == 0){
+				token.name_ = Token_Name_ciperror;
+				offset = sizeof(ciperror)-1;
+				nInteger = 1;
+			}else if (strncmp(token.value_, ipclose, strlen(ipclose)) == 0){
+				token.name_ = Token_Name_ipclose;
+				offset = sizeof(ipclose)-1;
+				nInteger = 2;
+			} else {
+				token.name_ = Token_Name_unknown;
+				usb_serialPrint("no pilla coincidencia en token ok");
 			}
+			
+			if (nInteger > 0)
+			{
+				int vector[index];
+				int count;
+				char buffer[index-offset]; 
+				strncpy(buffer, token.value_ + offset, index-offset);
+				getIntegers(buffer, vector, &count);
+				
+				if (count == nInteger)
+				{
+					switch (nInteger)
+					{
+						case 3: 
+							token.array_[2] = vector [2];
+						case 2: 
+							token.array_[1] = vector [1];
+						case 1: 
+							token.array_[0] = vector [0];
+					}
+				} else {
+					token.name_ = Token_Name_notReady;
+				}
+				
+			}
+			
 		}
 	}
 	
@@ -471,6 +567,13 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 		char * substr_rxBuffer_ = simcom->rxBuffer_ + strlen(token.value_);
 		memmove(simcom->rxBuffer_, substr_rxBuffer_, strlen(substr_rxBuffer_)+1); //rxBuffer toma el valor desde el indice que tiene substr_RxBuffer_
 	}
+
+	char token_name_str_[2]; 
+	sprintf(token_name_str_, "%d", token.name_);
+	usb_serialPrint("simcom_lexer | TOKEN NAME: ");
+	usb_serialPrint(token_name_str_);
+	usb_serialPrint("\n");
+	
 	usb_serialPrint("simcom_lexer | rxBuffer despues de memmove: ");
 	usb_serialPrint(simcom->rxBuffer_);
 	return token;
@@ -490,14 +593,89 @@ void Simcom_retry(Simcom * simcom){
 }
 
 //-------------se van rellenando funciones por acá?? 
-
+void Simcom_async(Simcom * simcom, Token * token){
+	if(token->name_ == Token_Name_gpsinfo){
+		simcom->positionRecord_.time_ = _calendar_get_counter(&CALENDAR_0.device);
+		simcom->positionRecord_.position_ = token->position_; 
+	}
+	else if (token->name_ == Token_Name_recvFrom)
+	{
+		strcat(simcom->tcpRxBuffer_, token->message_);
+	}
+	else if (token->name_ == Token_Name_ipclose) //server close connection 
+	{
+		if(simcom->remoteServerDisconnectionCount_ < 60UL)
+		{
+			simcom->remoteServerDisconnectionCount_++;
+		}
+		
+		Simcom_setTimer(simcom,(1UL+simcom->remoteServerDisconnectionCount_)*15000UL);
+		if (simcom->state_ <simcom_state_cipsend3)
+		{
+			Simcom_nextState(simcom, simcom_state_cipopen);
+		}else 
+		{
+			Simcom_nextState(simcom, simcom_state_cipclose);
+		}
+	}
+	else if (token->name_ == Token_Name_netclose)
+	{
+		if(token->array_[0] != 0 && !simcom->disconectionFlag_){
+			Simcom_nextState(simcom, simcom_state_netopen);
+		}
+	}
+	else if ((token->name_ == Token_Name_start) && (simcom->state_ != simcom_state_creset)) 
+	{
+		Simcom_nextState(simcom, simcom_state_creset);
+		simcom->attempt_ = 1;
+		simcom->lastRequest_ = _calendar_get_counter(&CALENDAR_0.device);
+		Simcom_setTimer(simcom, 20000);
+	}
+	else if (token->name_ == Token_Name_cipstat)
+	{
+		char t_val[strlen(token->value_)];
+		strcpy(t_val, token->value_);
+		Simcom_erasePartOfString(0,strlen(cipstat),t_val);
+		
+		char delimeter[]= ",";
+		
+		//hay que sacar indice de donde está el delimeter en t_val
+		char * delimeter_ptr = strstr(t_val, delimeter); //puntero a donde se encuentr "," en t_val
+		
+		size_t pos_delimeter_ptr = delimeter_ptr - t_val; //calcular el indice de donde esta \r\n restando posiciones de memoria
+		char n_token[pos_delimeter_ptr+1];
+		strncpy(n_token, t_val,pos_delimeter_ptr);
+		n_token[pos_delimeter_ptr+1] = '\0';
+		
+		simcom->tDataTxSize_ = (unsigned long) atoi(n_token);
+		
+		Simcom_erasePartOfString(0,pos_delimeter_ptr+strlen(delimeter), t_val);
+		
+		delimeter_ptr = strstr(t_val, delimeter);
+		pos_delimeter_ptr = delimeter_ptr - t_val;
+		strncpy(n_token, t_val,pos_delimeter_ptr);
+		n_token[pos_delimeter_ptr+1] = '\0';
+		
+		simcom->tDataRxSize_ = (unsigned long) atoi(n_token);		
+	}
+}
 
 
 void Simcom_setTimer(Simcom * simcom, unsigned long wait){
-	simcom->timer_ = _calendar_get_counter(&CALENDAR_0.device) + wait; //cambiar el millis por la función de microchip
+	simcom->timer_ = _calendar_get_counter(&CALENDAR_0.device) + wait; //cambiado el millis por la función de microchip
 	
 }
 
 bool Simcom_timer(Simcom * simcom){
-	return _calendar_get_counter(&CALENDAR_0.device) > simcom->timer_; //cambiar millis por la función de microchip
+	return _calendar_get_counter(&CALENDAR_0.device) > simcom->timer_; //cambiado millis por la función de microchip
+}
+
+void Simcom_erasePartOfString(int start, int length, char * str){
+	int str_length = strlen(str);
+	if (start >= 0 && start < str_length && length > 0) {
+		for (int i = start; i < str_length - length; i++) {
+			str[i] = str[i + length];
+		}
+		str[str_length - length] = '\0'; // Termina la cadena
+	}	
 }

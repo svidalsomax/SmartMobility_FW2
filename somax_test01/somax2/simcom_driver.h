@@ -96,7 +96,7 @@ typedef enum {
 typedef struct {
 	Token_Name name_;
 	char value_[100] ;
-	char* message_ ;
+	char message_ [100];
 	int array_[3];
 	Imei imei_;
 	Position position_;
@@ -226,5 +226,7 @@ void Simcom_retry(Simcom * simcom);
 void Simcom_setTimer(Simcom * simcom, unsigned long wait);
 
 bool Simcom_timer(Simcom * simcom);
+
+void Simcom_erasePartOfString(int start, int length, char * str);
 
 #endif /* SIMCOM_DRIVER_H_ */
