@@ -101,7 +101,7 @@ int32_t io_write(struct io_descriptor *const io_descr, const uint8_t *const buf,
  *         reception, it may depend on the availability of data in the
  *         ring buffer.
  */
-int32_t io_read(struct io_descriptor *const io_descr, uint8_t *const buf, const uint16_t length);
+int32_t io_read(struct io_descriptor *const io_descr, uint8_t *const buf, const uint16_t length); //length era con 16
 
 #ifdef __cplusplus
 }

@@ -14,10 +14,10 @@
 #include <hpl_adc_base.h>
 
 /*! The buffer size for USART */
-#define USART_0_BUFFER_SIZE 16
+#define USART_0_BUFFER_SIZE 1024
 
 /*! The buffer size for USART */
-#define USART_1_BUFFER_SIZE 16
+#define USART_1_BUFFER_SIZE 1024
 
 struct crc_sync_descriptor    CRC_0;
 struct usart_async_descriptor USART_0;

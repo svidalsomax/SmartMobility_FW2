@@ -36,7 +36,7 @@ int ble_init(void)
 
 void ble_send(char* command)
 {
-	char at_cmd[MAX_MESSAGE_LENGTH] = {0};
+	char at_cmd[MAX_MESSAGE_LENGTH_BLE] = {0};
 	strcpy(at_cmd, "");
 	strcat(at_cmd, command);
 	io_write(ble_io, (uint8_t *)at_cmd, strlen(at_cmd));
@@ -45,18 +45,18 @@ void ble_send(char* command)
 
 void ble_read(char * response)
 {
-	io_read(ble_io, (uint8_t *)response, MAX_MESSAGE_LENGTH);
+	io_read(ble_io, (uint8_t *)response, MAX_MESSAGE_LENGTH_BLE);
 	delay_ms(TIME_TO_DELAY);
 }
 
 void ble_send_and_receive(char* command, char* response)
 {
-	char at_cmd[MAX_MESSAGE_LENGTH] = {0};
+	char at_cmd[MAX_MESSAGE_LENGTH_BLE] = {0};
 	strcpy(at_cmd, "");
 	strcat(at_cmd, command);
 	io_write(ble_io, (uint8_t *)at_cmd, strlen(at_cmd));
 	delay_ms(TIME_TO_DELAY);
-	io_read(ble_io, (uint8_t *)response, MAX_MESSAGE_LENGTH);
+	io_read(ble_io, (uint8_t *)response, MAX_MESSAGE_LENGTH_BLE);
 	delay_ms(TIME_TO_DELAY);
 }
 
@@ -70,7 +70,7 @@ uint32_t ble_millis_ = 0;
 void ble_process(Ble *ble){
 	ble_read(ble->rxBuffer_);	
 		
-	char buffer[MAX_MESSAGE_LENGTH];
+	char buffer[MAX_MESSAGE_LENGTH_BLE];
 	
 	switch ((*ble).bleState_)
 	{
@@ -212,7 +212,7 @@ void parse(Ble *ble, char* block){
 }
 
 void ble_setName(char *name){
-	char buffer[MAX_MESSAGE_LENGTH];
+	char buffer[MAX_MESSAGE_LENGTH_BLE];
 	strcpy(buffer, "AT+NAME");
 	strcat(buffer, name);
 	//uart_.write(&buffer); cambiar por io_write??
@@ -220,8 +220,8 @@ void ble_setName(char *name){
 }
 
 bool ble_setBaud(unsigned long baud, Ble *ble){
-	char buffer[MAX_MESSAGE_LENGTH];
-	char answer[MAX_MESSAGE_LENGTH];
+	char buffer[MAX_MESSAGE_LENGTH_BLE];
+	char answer[MAX_MESSAGE_LENGTH_BLE];
 	switch (baud)
 	{
 	case 9600:
@@ -290,7 +290,7 @@ bool ble_setBaud(unsigned long baud, Ble *ble){
 }
 
 bool ble_sleepMode(Ble *ble){ 
-	char buffer[MAX_MESSAGE_LENGTH];
+	char buffer[MAX_MESSAGE_LENGTH_BLE];
 	strcpy(buffer, "AT+SLEEP");
 	ble_send_and_receive(buffer, ble->response_);
 	delay_ms(TIME_TO_DELAY);
@@ -306,7 +306,7 @@ bool ble_sleepMode(Ble *ble){
 }
 
 bool ble_wakeUp(Ble *ble){
-	char buffer[MAX_MESSAGE_LENGTH];
+	char buffer[MAX_MESSAGE_LENGTH_BLE];
 	strcpy(buffer, "AAAAAAAAAAAAAAAAAAAAAAAAT");
 	ble_send_and_receive(buffer, ble->response_);
 	delay_ms(TIME_TO_DELAY);

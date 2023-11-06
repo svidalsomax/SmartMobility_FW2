@@ -22,7 +22,7 @@
 ******************************************************************************/
 
 
-#define MAX_MESSAGE_LENGTH 1024	// Cambiar tambien USART_0_BUFFER_SIZE en driver_init.c -- se cambio a 1024 el 6 de noviembre.
+#define MAX_MESSAGE_LENGTH_BLE 1024	// Cambiar tambien USART_0_BUFFER_SIZE en driver_init.c -- se cambio a 1024 el 6 de noviembre.
 #define TIME_TO_DELAY 20
 #define TIME_TO_DELAY_BLE 750
 
@@ -49,8 +49,8 @@ typedef struct{
 
 
 typedef struct{
-	char txBuffer_[MAX_MESSAGE_LENGTH];
-	char rxBuffer_[MAX_MESSAGE_LENGTH];
+	char txBuffer_[MAX_MESSAGE_LENGTH_BLE];
+	char rxBuffer_[MAX_MESSAGE_LENGTH_BLE];
 	bleStatus bleState_;
 	unsigned long timer_;
 	unsigned long time_;
@@ -59,7 +59,7 @@ typedef struct{
 	bool role_ ;
 	int scanTime_;
 	ble_Scan scan_;
-	char response_[MAX_MESSAGE_LENGTH];
+	char response_[MAX_MESSAGE_LENGTH_BLE];
 }Ble;
 
 

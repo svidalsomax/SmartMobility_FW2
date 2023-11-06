@@ -480,13 +480,13 @@ int main(void)
 			gpio_set_pin_level(LED0, false);
 			gpio_set_pin_level(LED1, false);
 			gpio_set_pin_level(LED2, false);
-			usb_read_routine();		
+			//usb_read_routine();		
 			
 			
 			usb_serialPrint("\n --- WHILE 1 --- \n");
 			
 			//ble_process(&ble);
-			//Simcom_process(&simcom);  	
+			Simcom_process(&simcom);  	
 			
 			delay_ms(3000);  //revisar precisión haciendo aún más corto el while
 		}

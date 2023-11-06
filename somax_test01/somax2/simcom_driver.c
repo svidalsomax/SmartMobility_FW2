@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define MAX_MESSAGE_LENGTH 64 // Cambiar tambien USART_1_BUFFER_SIZE en driver_init.c
+#define MAX_MESSAGE_LENGTH_SIMCOM 1024 // Cambiar tambien USART_1_BUFFER_SIZE en driver_init.c
 #define TIME_TO_DELAY 20
 
 static struct io_descriptor *simcom_io;
@@ -45,21 +45,22 @@ int simcom_init(void)
 
 void simcom_send(char* command)
 {
-	char at_cmd[MAX_MESSAGE_LENGTH] = {0};
+	char at_cmd[MAX_MESSAGE_LENGTH_SIMCOM] = {0};
 	strcpy(at_cmd, "");
 	strcat(at_cmd, command);
 	io_write(simcom_io, (uint8_t *)at_cmd, strlen(at_cmd));
+	delay_ms(TIME_TO_DELAY);
 }
 
 void simcom_send_and_receive(char* command, char* response)
 {
-	char at_cmd[MAX_MESSAGE_LENGTH] = {0};
+	char at_cmd[MAX_MESSAGE_LENGTH_SIMCOM] = {0};
 	strcpy(at_cmd, "");
 	strcat(at_cmd, command);
 	io_write(simcom_io, (uint8_t *)at_cmd, strlen(at_cmd));
 	delay_ms(TIME_TO_DELAY);
-	io_read(simcom_io, response, 1024);  //1024 era el max length
 	delay_ms(TIME_TO_DELAY);
+	io_read(simcom_io, response, 1024);  //1024 era el max length
 	delay_ms(TIME_TO_DELAY);
 	delay_ms(TIME_TO_DELAY);
 	delay_ms(TIME_TO_DELAY); // se añadieron 3 time to delay para ver si eso era el problema de tener la respuesta completa.
@@ -67,7 +68,9 @@ void simcom_send_and_receive(char* command, char* response)
 
 void simcom_receive(char* response)
 {
-	io_read(simcom_io, response, MAX_MESSAGE_LENGTH);
+	io_read(simcom_io, response, MAX_MESSAGE_LENGTH_SIMCOM);
+	delay_ms(TIME_TO_DELAY);
+	delay_ms(TIME_TO_DELAY);
 	delay_ms(TIME_TO_DELAY);
 }
 
