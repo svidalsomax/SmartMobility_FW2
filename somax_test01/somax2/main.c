@@ -70,12 +70,12 @@ void usb_read_routine(void )
 		{
 			char *command = inbuffer + 4;
 			strcat(command, "\r");
-			char respsim[64] = {0};
+			char respsim[1024] = {0}; //era 64 el tamaño
 			simcom_send_and_receive(command, respsim);
 			usb_serial_write("Received: ", strlen("Received: "));
 			delay_ms(10);
 			usb_serial_write(respsim, strlen(respsim));
-			delay_ms(10);
+			delay_ms(1000);
 			usb_serial_write("\n", strlen("\n"));
 			
 		}
@@ -486,13 +486,8 @@ int main(void)
 			usb_serialPrint("\n --- WHILE 1 --- \n");
 			
 			//ble_process(&ble);
+			//Simcom_process(&simcom);  	
 			
-			Simcom_process(&simcom);  	
-			
-			
-			
-			
-				
 			delay_ms(3000);  //revisar precisión haciendo aún más corto el while
 		}
 		else

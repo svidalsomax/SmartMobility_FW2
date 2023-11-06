@@ -61,7 +61,7 @@ typedef int32_t (*io_write_t)(struct io_descriptor *const io_descr, const uint8_
 /**
  * \brief I/O read function pointer type
  */
-typedef int32_t (*io_read_t)(struct io_descriptor *const io_descr, uint8_t *const buf, const uint16_t length);
+typedef int32_t (*io_read_t)(struct io_descriptor *const io_descr, uint8_t *const buf, const uint16_t length); //antes de length va el 
 
 /**
  * \brief I/O descriptor

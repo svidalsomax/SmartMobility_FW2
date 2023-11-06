@@ -108,8 +108,8 @@ typedef struct {
 } PositionRecord;
 
 typedef struct {
-	char txBuffer_[100]; 
-	char rxBuffer_[100];
+	char txBuffer_[200]; 
+	char rxBuffer_[200];
 	
 	Simcom_State state_; 
 	bool otaMode_; 

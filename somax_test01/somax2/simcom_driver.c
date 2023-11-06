@@ -58,8 +58,11 @@ void simcom_send_and_receive(char* command, char* response)
 	strcat(at_cmd, command);
 	io_write(simcom_io, (uint8_t *)at_cmd, strlen(at_cmd));
 	delay_ms(TIME_TO_DELAY);
-	io_read(simcom_io, response, MAX_MESSAGE_LENGTH);
+	io_read(simcom_io, response, 1024);  //1024 era el max length
 	delay_ms(TIME_TO_DELAY);
+	delay_ms(TIME_TO_DELAY);
+	delay_ms(TIME_TO_DELAY);
+	delay_ms(TIME_TO_DELAY); // se añadieron 3 time to delay para ver si eso era el problema de tener la respuesta completa.
 }
 
 void simcom_receive(char* response)
@@ -225,7 +228,7 @@ void Simcom_clearOtaMode(Simcom * simcom){
 }
 
 void Simcom_process(Simcom * simcom){
-    char buffer[64] = {0}; 
+    char buffer[1024] = {0};
 	simcom_receive(buffer);
 	strcat(simcom->rxBuffer_ , buffer);
 
@@ -253,7 +256,8 @@ void Simcom_process(Simcom * simcom){
 		Simcom_request(simcom, "AT+CRESET\r", 1, 3600000, 0);
 		
 		if(Simcom_timer(simcom)){
-			simcom->rxBuffer_[0]='\0'; //rxBuffer.clear();
+			usb_serialPrint("Simcom_timer ok en reset\n");
+			simcom->rxBuffer_[0]="\0"; //rxBuffer.clear();
 			simcom->lastReset_ = _calendar_get_counter(&CALENDAR_0.device);
 			Simcom_nextState(simcom, simcom_state_ate0);
 		}
@@ -274,6 +278,50 @@ void Simcom_process(Simcom * simcom){
 
 		break;
 		
+	case simcom_state_cmee: 
+		usb_serialPrint("SIMCOM_STATE: CMEE\n");
+	
+		#ifdef DEBUG_SIM
+			Simcom_request(simcom, "AT+CMEE=2\r", 5, 3000, 1000);
+		#else
+			Simcom_request(simcom, "AT+CMEE=1", 5, 3000, 1000);
+		#endif		
+		
+		Simcom_processResponse(simcom, simcom_state_cgps);
+		
+		break;
+		
+	case simcom_state_cgps: 
+		usb_serialPrint("SIMCOM_STATE: CGPS\n");
+	
+		Simcom_request(simcom, "AT+CGPS=1,1\r", 5, 3000, 1000); 	
+		Simcom_processResponse(simcom, simcom_state_simei);
+		break; 
+		
+	case simcom_state_simei:
+		usb_serialPrint("SIMCOM_STATE: SIMEI\n");
+		Simcom_request(simcom, "AT+SIMEI?\r", 5, 3000, 1000);
+		
+		while(1){
+			usb_serialPrint("\n WHILE 1 - SIMEI \n");
+			Token token = Simcom_lexer(simcom, true);
+			usb_serialPrint("\n salgo del simcom lexer");
+			if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
+				break;
+			}else if(token.name_ == Token_Name_simei){
+				simcom->imei_ = token.imei_;
+			}else if(token.name_ == Token_Name_ok){
+				if(imei_value(&simcom->imei_)){
+					Simcom_nextState(simcom, simcom_state_stk);
+				}
+			}
+		}
+		break;
+	
+	case simcom_state_stk: 
+		usb_serialPrint("SIMCOM_STATE: STK\n");
+		break;
+	
     default:
 		usb_serialPrint("SIMCOM_STATE: DEFAULT \n");
         break;
@@ -429,18 +477,18 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 				token.name_ = Token_Name_blank;
 			}else if(strcmp(token.value_,ok)==0){
 				token.name_ = Token_Name_ok;
-			}else if(strncmp(token.value_, cipstat, strlen(cipstat))==0){
+			}else if(strncmp(token.value_, cipstat, strlen(cipstat))==0){ // cambiar cipstat porque no llegará nunca ahí
 				token.name_ = Token_Name_cipstat;
-			}else if(strncmp(token.value_, error, strlen(error)) == 0){
+			}else if(strncmp(token.value_, error, strlen(error)) == 0){ 
 				token.name_ = Token_Name_error;
 				token.array_[0]=-1;
 			}else if ((strncmp(token.value_, cmeError, strlen(cmeError)) == 0) || (strncmp(token.value_, cmsError, strlen(cmsError)) == 0)){
 				token.name_ = Token_Name_error;
 				offset = strlen(cmeError)-1;
 				nInteger = 1;
-			}else if (token.value_ == start){
+			}else if (strncmp(token.value_, start, strlen(start)) == 0){
 				token.name_ = Token_Name_start;
-			}else if (token.value_ == pbDone){
+			}else if (strncmp(token.value_, pbDone, strlen(pbDone)) == 0){
 				token.name_ = Token_Name_pbDone;
 			}else if (strncmp(token.value_, gpsinfo, strlen(gpsinfo)) == 0){
 				for (int i = 0; (i < 2) && (rn_pointer != NULL); i++)
@@ -631,7 +679,7 @@ void Simcom_async(Simcom * simcom, Token * token){
 		simcom->lastRequest_ = _calendar_get_counter(&CALENDAR_0.device);
 		Simcom_setTimer(simcom, 20000);
 	}
-	else if (token->name_ == Token_Name_cipstat)
+	else if (token->name_ == Token_Name_cipstat) //ESTE ESTADO TIENE QUE CAMBIAR - pero aún no se mete acá nada
 	{
 		char t_val[strlen(token->value_)];
 		strcpy(t_val, token->value_);

@@ -22,7 +22,7 @@
 ******************************************************************************/
 
 
-#define MAX_MESSAGE_LENGTH 64	// Cambiar tambien USART_0_BUFFER_SIZE en driver_init.c
+#define MAX_MESSAGE_LENGTH 1024	// Cambiar tambien USART_0_BUFFER_SIZE en driver_init.c -- se cambio a 1024 el 6 de noviembre.
 #define TIME_TO_DELAY 20
 #define TIME_TO_DELAY_BLE 750
 
