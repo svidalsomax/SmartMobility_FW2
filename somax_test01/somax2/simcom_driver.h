@@ -44,9 +44,11 @@ typedef enum{
 	simcom_state_cgps,
 	simcom_state_simei,
 	simcom_state_stk,
-	simcom_state_cnvw,
 	simcom_state_cgatt,
-	simcom_state_cgsockcont,
+	//simcom_state_cnvw, se salta y se pasa a CGDCONT
+	simcom_state_cgdcont,
+	simcom_state_cgact,
+	//simcom_state_cgsockcont,//este estado no se usará más
 	simcom_state_cgauth,
 	simcom_state_csocksetpn,
 	simcom_state_ciptimeout,
@@ -228,5 +230,15 @@ void Simcom_setTimer(Simcom * simcom, unsigned long wait);
 bool Simcom_timer(Simcom * simcom);
 
 void Simcom_erasePartOfString(int start, int length, char * str);
+
+
+
+/*
+
+FUNCIONES EXTRAS
+
+*/
+
+void string_clear(char *str, size_t size);
 
 #endif /* SIMCOM_DRIVER_H_ */

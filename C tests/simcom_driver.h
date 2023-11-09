@@ -77,8 +77,8 @@ typedef enum {
 
 typedef struct {
 	Token_Name name_; 	
-	char* value_ ; 
-	char* message_ ; 
+	char value_[100] ; 
+	char message_ [100]; 
 	int array_[3]; 
 	Imei imei_; 
 	Position position_; 

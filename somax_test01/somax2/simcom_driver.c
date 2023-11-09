@@ -49,7 +49,7 @@ void simcom_send(char* command)
 	strcpy(at_cmd, "");
 	strcat(at_cmd, command);
 	io_write(simcom_io, (uint8_t *)at_cmd, strlen(at_cmd));
-	delay_ms(TIME_TO_DELAY);
+	delay_ms(100);
 }
 
 void simcom_send_and_receive(char* command, char* response)
@@ -58,20 +58,15 @@ void simcom_send_and_receive(char* command, char* response)
 	strcpy(at_cmd, "");
 	strcat(at_cmd, command);
 	io_write(simcom_io, (uint8_t *)at_cmd, strlen(at_cmd));
-	delay_ms(TIME_TO_DELAY);
-	delay_ms(TIME_TO_DELAY);
+	delay_ms(100);
 	io_read(simcom_io, response, 1024);  //1024 era el max length
-	delay_ms(TIME_TO_DELAY);
-	delay_ms(TIME_TO_DELAY);
-	delay_ms(TIME_TO_DELAY); // se añadieron 3 time to delay para ver si eso era el problema de tener la respuesta completa.
+	delay_ms(100); // se añadieron 3 time to delay para ver si eso era el problema de tener la respuesta completa.
 }
 
 void simcom_receive(char* response)
 {
 	io_read(simcom_io, response, MAX_MESSAGE_LENGTH_SIMCOM);
-	delay_ms(TIME_TO_DELAY);
-	delay_ms(TIME_TO_DELAY);
-	delay_ms(TIME_TO_DELAY);
+	delay_ms(120);
 }
 
 /******************************************************************************
@@ -312,9 +307,12 @@ void Simcom_process(Simcom * simcom){
 			if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
 				break;
 			}else if(token.name_ == Token_Name_simei){
-				simcom->imei_ = token.imei_;
+				usb_serialPrint("\n    Token name simei asignado    \n");
+				simcom->imei_.imei_ = token.imei_.imei_;
 			}else if(token.name_ == Token_Name_ok){
-				if(imei_value(&simcom->imei_)){
+				usb_serialPrint("\n    Token name ok despues de simei asignado     \n");
+				if(simcom->imei_.imei_){
+					usb_serialPrint("\n    next_state de simei     \n");
 					Simcom_nextState(simcom, simcom_state_stk);
 				}
 			}
@@ -323,6 +321,40 @@ void Simcom_process(Simcom * simcom){
 	
 	case simcom_state_stk: 
 		usb_serialPrint("SIMCOM_STATE: STK\n");
+		Simcom_request(simcom, "AT+STK=0\r", 5, 3000, 1000);
+		Simcom_processResponse(simcom, simcom_state_cgatt); //aca debería cambiar a estadoCNVW pero por simcomnueva se pasa a CGDCONT
+		break;
+	
+	//GPRS Attach
+	case simcom_state_cgatt:
+		usb_serialPrint("SIMCOM_STATE: CGATT\n");
+		Simcom_request(simcom, "AT+CGATT=1\r", 5, 3000, 1000);
+		Simcom_processResponse(simcom, simcom_state_cgdcont);
+		break;
+	
+	//SET APN
+	case simcom_state_cgdcont:
+		usb_serialPrint("SIMCOM_STATE: CGDCONT\n");
+		Simcom_request(simcom, "AT+CGDCONT=1,\"IP\",\"iot.secure\"\r", 5, 3000, 1000);
+		Simcom_processResponse(simcom, simcom_state_cgact);
+		break;
+	
+	// Active PDP context 
+	case simcom_state_cgact: 
+		usb_serialPrint("SIMCOM_STATE: CGACT\n");
+		Simcom_request(simcom, "AT+CGACT=1,1\r", 5, 3000, 1000);
+		Simcom_processResponse(simcom, simcom_state_cgauth);
+		break; 
+		
+	// Set PDP context username and password
+	case simcom_state_cgauth:
+		usb_serialPrint("SIMCOM_STATE: CGAUTH\n");
+		Simcom_request(simcom, "AT+CGAUTH=1,1,\" \", \" \"\r", 5, 3000, 1000); //no hay usuario ni pass, pero debe quedar en espacio
+		Simcom_processResponse(simcom, simcom_state_ciptimeout);
+		break;
+		
+	case simcom_state_ciptimeout:
+		usb_serialPrint("SIMCOM_STATE: CIPTIMEOUT\n");
 		break;
 	
     default:
@@ -335,6 +367,7 @@ void Simcom_process(Simcom * simcom){
 		usb_serialPrint("txbuffer:"); 
 		usb_serialPrint(simcom->txBuffer_);
 		simcom_send(simcom->txBuffer_);
+		string_clear(simcom->txBuffer_,sizeof(simcom->txBuffer_)); //limpia el txBuffer para que no se vuelva a mandar
 		simcom->lastRequest_=0;
 	}
 
@@ -511,7 +544,7 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 				if (strlen(token.value_) == 25)
 				{
 					token.name_ = Token_Name_simei;
-					imei_loadText(&token.imei_,token.value_);
+					imei_loadText(&token.imei_,token.value_+8); //acá está el error
 				}else{
 					token.name_ = Token_Name_unknown;
 				}				
@@ -615,6 +648,7 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 	
 	//quitar parte que se analizo del rxBuffer: 
 	if(pull && (token.name_ != Token_Name_notReady)){
+		usb_serialPrint("----    TOKEN OK Y DISTINTO A NOT READY ----   \n");
 		char * substr_rxBuffer_ = simcom->rxBuffer_ + strlen(token.value_);
 		memmove(simcom->rxBuffer_, substr_rxBuffer_, strlen(substr_rxBuffer_)+1); //rxBuffer toma el valor desde el indice que tiene substr_RxBuffer_
 	}
@@ -682,7 +716,7 @@ void Simcom_async(Simcom * simcom, Token * token){
 		simcom->lastRequest_ = _calendar_get_counter(&CALENDAR_0.device);
 		Simcom_setTimer(simcom, 20000);
 	}
-	else if (token->name_ == Token_Name_cipstat) //ESTE ESTADO TIENE QUE CAMBIAR - pero aún no se mete acá nada
+	else if (token->name_ == Token_Name_cipstat) //ESTE ESTADO TIENE QUE CAMBIAR
 	{
 		char t_val[strlen(token->value_)];
 		strcpy(t_val, token->value_);
@@ -707,7 +741,7 @@ void Simcom_async(Simcom * simcom, Token * token){
 		strncpy(n_token, t_val,pos_delimeter_ptr);
 		n_token[pos_delimeter_ptr+1] = '\0';
 		
-		simcom->tDataRxSize_ = (unsigned long) atoi(n_token);		
+		simcom->tDataRxSize_ = (unsigned long) atoi(n_token);
 	}
 }
 
@@ -729,4 +763,20 @@ void Simcom_erasePartOfString(int start, int length, char * str){
 		}
 		str[str_length - length] = '\0'; // Termina la cadena
 	}	
+}
+
+
+
+//
+//
+// 
+// ------------- FUNCIONES EXTRAASS ----------
+//
+//
+//
+
+void string_clear(char *str, size_t size) {
+	for (size_t i = 0; i < size; i++) {
+		str[i] = '\0'; // Asigna '\0' (carácter nulo) a cada elemento
+	}
 }

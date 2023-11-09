@@ -397,7 +397,6 @@ uint8_t initial_check(void )
 
 /* main */
 
-//CAMBIO PARA PROBAR SUBIDA A GIT.
 
 Ble ble = {0};
 Simcom simcom = {0};
@@ -480,10 +479,10 @@ int main(void)
 			gpio_set_pin_level(LED0, false);
 			gpio_set_pin_level(LED1, false);
 			gpio_set_pin_level(LED2, false);
-			//usb_read_routine();		
+			usb_read_routine();		
 			
 			
-			usb_serialPrint("\n --- WHILE 1 --- \n");
+			usb_serialPrint("\n ----------- WHILE 1 ----------- \n");
 			
 			//ble_process(&ble);
 			Simcom_process(&simcom);  	

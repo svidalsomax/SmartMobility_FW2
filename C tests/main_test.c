@@ -59,18 +59,28 @@ int main() {
 	Simcom_process(&simcom);
 	//printf("After process");
 
-
 	strcpy(simcom.rxBuffer_, "+CGPSINFO: XXXXXX\r\nOK\r\n");
 
 	char *substr = strstr(simcom.rxBuffer_ + 2, "\r\n");
 
 	//printf("rx_buffer es: %s", simcom.rxBuffer_);
 
-	char token_value[]=;
+	Token token;
+	strcpy(token.value_,"+SIMEI: 863427044253806\r\n");
+	imei_loadText(&token.imei_, token.value_+8);
 
+	printf("token.imei_.imei: %zu \n", token.imei_.imei_);
+
+	simcom.imei_.imei_=token.imei_.imei_;
+
+	printf("simcom.imei_.imei_: %zu \n", simcom.imei_.imei_);
+
+	if(simcom.imei_.imei_){
+		printf("TRUE SIMCOM.IMEI_IMEI_\n");
+	}
 	//strncpy(token_value, simcom.rxBuffer_, 10);
 
-
+/*
 
 	printf("token value es: %s \n", token_value);
 	printf("token value strlen: %d \n", strlen(token_value));
@@ -97,7 +107,7 @@ int main() {
 			//printf("substr NULL?: %s", substr);
 		}		
 	}
-
+*/
 	//printf("index: %zu \n", index);
 
 	//char token_value[100];
