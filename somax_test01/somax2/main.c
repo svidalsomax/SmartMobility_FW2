@@ -470,6 +470,7 @@ int main(void)
 	//ble.tryCounter_ = 0; 
 	//ble.tryCounter_ ++; 
 	
+	usb_serialPrint("[VOID SETTING] INITILICE SIMCOM \n");
 	Simcom_struct_init(&simcom); 
 
 	
@@ -479,7 +480,7 @@ int main(void)
 			gpio_set_pin_level(LED0, false);
 			gpio_set_pin_level(LED1, false);
 			gpio_set_pin_level(LED2, false);
-			usb_read_routine();		
+			//usb_read_routine();		
 			
 			
 			usb_serialPrint("\n ----------- WHILE 1 ----------- \n");

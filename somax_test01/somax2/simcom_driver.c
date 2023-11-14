@@ -1,7 +1,7 @@
 /*
  * simcom_driver.c
  *
- *  Author: MWF
+ *  Author: MWF / SVL
  */ 
 
 #include "simcom_driver.h"
@@ -66,7 +66,7 @@ void simcom_send_and_receive(char* command, char* response)
 void simcom_receive(char* response)
 {
 	io_read(simcom_io, response, MAX_MESSAGE_LENGTH_SIMCOM);
-	delay_ms(120);
+	delay_ms(200);
 }
 
 /******************************************************************************
@@ -136,9 +136,13 @@ void Simcom_struct_init(Simcom * simcom ){
 	simcom->serverPort_ = 0;
 	simcom->ipaddr_ = "0.0.0.0";
 	simcom->positionDelay_ = 10000;
-	simcom->tcpTxBlock_ = 0;
+	//simcom->tcpTxBlock_ = 0;
+	simcom->tcpTxBlock_ = 100;
 	simcom->tDataRxSize_ = 0;
 	simcom->tDataTxSize_ = 0;
+	
+	//limpiar arreglos con tamaño definido
+	string_clear(simcom->tcpTxBuffer_,1024);
 }
 
 void Simcom_setStartDelay(Simcom * simcom, unsigned long startDelay){
@@ -352,9 +356,359 @@ void Simcom_process(Simcom * simcom){
 		Simcom_request(simcom, "AT+CGAUTH=1,1,\" \", \" \"\r", 5, 3000, 1000); //no hay usuario ni pass, pero debe quedar en espacio
 		Simcom_processResponse(simcom, simcom_state_ciptimeout);
 		break;
-		
+	
+	//Set timeout value in TCP connection	
 	case simcom_state_ciptimeout:
 		usb_serialPrint("SIMCOM_STATE: CIPTIMEOUT\n");
+		Simcom_request(simcom, "AT+CIPTIMEOUT=60000,60000,60000\r", 5, 3000, 1000);
+		Simcom_processResponse(simcom, simcom_state_cgpsinfo);		
+		break;
+	
+	// Set SIMCOM to get position repeatedly
+	case simcom_state_cgpsinfo:
+		usb_serialPrint("SIMCOM_STATE: CGPSINFO\n");
+		Simcom_request(simcom, "AT+CGPSINFO=11\r", 5, 3000, 1000);
+		Simcom_processResponse(simcom, simcom_state_cipsendmode);
+		break;
+	
+	// Set cipsend mode 
+	case simcom_state_cipsendmode: 
+		usb_serialPrint("SIMCOM_STATE: CIPSENDMODE\n");
+		Simcom_request(simcom, "AT+CIPSENDMODE=1\r", 5, 3000, 1000);
+		Simcom_processResponse(simcom, simcom_state_netopen);
+		break;
+	
+	// Open PDP network
+	case simcom_state_netopen:
+		usb_serialPrint("SIMCOM_STATE: NETOPEN\n");
+		Simcom_request(simcom, "AT+NETOPEN\r", 5, 500+simcom->netTimeout_, 5000);
+		
+		while(1){
+			usb_serialPrint("\n WHILE 1 - NETOPEN \n");
+			Token token = Simcom_lexer(simcom, true);
+			usb_serialPrint("\n salgo del simcom lexer NETOPEN");
+			if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
+				break;
+			}else if(token.name_ == Token_Name_netopen){
+				usb_serialPrint("\n    Token name Netopen    \n");
+				if (token.array_[0]==0) //netopen: 0
+				{
+					Simcom_nextState(simcom, simcom_state_ipaddr);
+				}
+				else {
+					Simcom_retry(simcom);
+				}			
+			}else if(token.name_ == Token_Name_error){
+				usb_serialPrint("\n    Token name ERROR en netopen    \n");
+				Simcom_retry(simcom);
+			}
+		}
+				
+		break;
+	
+	// Get IP Address of the device
+	case simcom_state_ipaddr:
+		usb_serialPrint("SIMCOM_STATE: IPADDR\n");
+		Simcom_request(simcom, "AT+IPADDR\r", 5, 3000, 1000);
+		
+		while(1){
+			usb_serialPrint("\n WHILE 1 - IPADDR \n");
+			Token token = Simcom_lexer(simcom, true);
+			usb_serialPrint("\n salgo del simcom lexer IPADDR");
+			if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
+				break;
+			}else if(token.name_ == Token_Name_ipaddr){
+				usb_serialPrint("\n    Token name Ipaddr   \n");
+				if (strcmp(simcom->ipaddr_,"0.0.0.0") != 0) //netopen: 0
+				{
+					Simcom_setTimer(simcom, 5000);
+					Simcom_nextState(simcom, simcom_state_wait);
+				}
+				else {
+					Simcom_retry(simcom);
+				}
+			}else if(token.name_ == Token_Name_error){
+				usb_serialPrint("\n    Token name ERROR en IPADDR   \n");
+				Simcom_retry(simcom);
+			}
+		}
+		break;	
+	
+	// Wait to have data to send
+	case simcom_state_wait:
+		usb_serialPrint("SIMCOM_STATE: WAIT\n");
+		if (Simcom_timer(simcom))
+		{
+			usb_serialPrint("timer WAIT terminado \n");
+			if (simcom->disconectionFlag_)
+			{
+				Simcom_nextState(simcom, simcom_state_cipopen);
+			}
+			else if (simcom->tcpTxBuffer_[0]!='\0') //wait until tcptxbuffer > 0
+			{
+				Simcom_nextState(simcom, simcom_state_cipopen);
+			}
+			else {
+				Token token = Simcom_lexer(simcom,true);
+				Simcom_async(simcom, &token);
+			}
+		}
+		else {
+			Token token = Simcom_lexer(simcom,true);
+			Simcom_async(simcom, &token);
+		}
+		break;	
+
+	// Connect to socket
+	case simcom_state_cipopen:
+		usb_serialPrint("SIMCOM_STATE: CIPOPEN\n");
+		if (Simcom_timer(simcom))
+		{
+			Simcom_request(simcom, "AT+CIPOPEN:0,\"TCP\",\"190.3.169.116\",\"56731\"\r", 5, 500+simcom->openTimeout_, 500);
+			while(1){
+				Token token = Simcom_lexer(simcom, true);
+				if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
+					break;
+				} else if (token.name_ == Token_Name_cipopen)
+				{
+					if (simcom->disconectionFlag_ && (simcom->tcpTxBuffer_[0]!='\0'))
+					{
+						if (token.array_[1]==0)
+						{
+							string_clear(simcom->tcpTxBuffer_,sizeof(simcom->tcpTxBuffer_));
+							Simcom_setTimer(simcom,120000);
+							Simcom_nextState(simcom,simcom_state_cipstat);
+						}
+					}
+					else
+					{
+						if (token.array_[1]==0){
+							simcom->connection_ ++;
+							string_clear(simcom->tcpTxBuffer_, sizeof(simcom->tcpTxBuffer_));
+							Simcom_setTimer(simcom,5000);
+							Simcom_nextState(simcom,simcom_state_cipsend0);
+						}else if (token.array_[1]>0)
+						{
+							Simcom_setTimer(simcom,(simcom->networkServerDisconnectionCount_+1UL)*20000UL);
+							if (simcom->networkServerDisconnectionCount_ < 10UL)
+							{
+								simcom->networkServerDisconnectionCount_ ++;
+							}
+							Simcom_retry(simcom);
+						}
+						else
+						{ 
+							Simcom_retry(simcom);
+						}
+					}
+				}
+				else if (token.name_ == Token_Name_error)
+				{
+					Simcom_retry(simcom);
+				}
+			}
+		}
+		else{
+			Token token = Simcom_lexer(simcom,true);
+			Simcom_async(simcom, &token);
+		}
+		break;
+	
+	// TCP send request
+	case simcom_state_cipsend0:
+		usb_serialPrint("SIMCOM_STATE: CIPSEND 0 \n");
+		simcom->lastOnline_ = _calendar_get_counter(&CALENDAR_0.device);
+		if (!(simcom->tcpTxBuffer_[0]=='\0') && Simcom_timer(simcom))
+		{
+			if (!simcom->attempt_)
+			{
+				size_t size1500 = 1500;
+				simcom->tcpTxBlock_ = MIN(strlen(simcom->tcpTxBuffer_), size1500);
+			}
+			
+			char command_buffer[] = "AT+CIPSEND=0,";
+			char tcpTXblock_string [20];
+		    sprintf(tcpTXblock_string, "%zu", simcom->tcpTxBlock_);
+			strcat(command_buffer,tcpTXblock_string);
+			strcat(command_buffer,"\r");
+			Simcom_request(simcom, command_buffer, 5, 1000, 100);
+			while(1)
+			{
+				Token token = Simcom_lexer(simcom, true);
+				
+				if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady))
+				{
+					break;
+				}else if (token.name_ == Token_Name_sendPrompt)
+				{
+					Simcom_nextState(simcom, simcom_state_cipsend1);
+				}else if (token.name_ == Token_Name_error)
+				{
+					Simcom_retry(simcom);
+				}else
+				{
+					Simcom_async(simcom, &token);					
+				}
+			}
+		}
+		else 
+		{
+			Token token_async = Simcom_lexer(simcom, true);
+			Simcom_async(simcom, &token_async);	
+		}
+		
+		break;
+	
+	// TCP send message
+	case simcom_state_cipsend1:
+		usb_serialPrint("SIMCOM_STATE: CIPSEND 1\n");
+		simcom->lastOnline_ = _calendar_get_counter(&CALENDAR_0.device);
+		
+		char command_buffer[1500]; 
+		strncpy(command_buffer,simcom->tcpTxBuffer_,simcom->tcpTxBlock_);
+		
+		Simcom_request(simcom,command_buffer, 1, 3000, 1000);
+		
+		Simcom_setTimer(simcom, simcom->sendTimeout_+500);
+		Simcom_nextState(simcom, simcom_state_cipsend2);		
+		break;
+	
+	// Check for +CIPSEND errors during wait for ACK
+	case simcom_state_cipsend2:
+		usb_serialPrint("SIMCOM_STATE: CIPSEND 2 \n");
+		simcom->lastOnline_ = _calendar_get_counter(&CALENDAR_0.device);
+		
+		if (Simcom_timer(simcom))
+		{
+			Simcom_nextState(simcom, simcom_state_cipsend0);
+		}else 
+		{
+			while (1)
+			{
+				Token token = Simcom_lexer(simcom, true);
+				
+				if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady))
+				{
+					break;
+				}else if (token.name_ == Token_Name_cipsend)
+				{
+					if (token.array_[1]==token.array_[2])
+					{
+						Simcom_nextState(simcom, simcom_state_cipsend3);
+					}else {
+						Simcom_reset(simcom);
+					}
+				}
+				else 
+				{
+					Simcom_async(simcom, &token);	
+				}	
+			}
+		}
+		break; 
+	
+	// Check for timeout
+	case simcom_state_cipsend3:
+		usb_serialPrint("SIMCOM_STATE: CIPSEND 3 \n");
+		simcom->lastOnline_ = _calendar_get_counter(&CALENDAR_0.device);
+		
+		if (Simcom_timer(simcom))
+		{
+			char *subcadena = simcom->tcpTxBuffer_ + simcom->tcpTxBlock_;
+			memmove(simcom->tcpTxBuffer_, subcadena, strlen(subcadena)+1);  // estas dos lineas es lo homologo a hacer tcpTxBuffer_ = tcpTxBuffer_.substr(tcpTxBlock_);
+			Token token_async = Simcom_lexer(simcom,true);
+			Simcom_async(simcom, &token_async);
+			if (simcom->otaMode_)
+			{
+				Simcom_setTimer(simcom, 5000);
+			}else{
+				Simcom_setTimer(simcom, 90000);
+			}
+			Simcom_nextState(simcom, simcom_state_cipstat);
+		}
+		else{
+			Token token_async = Simcom_lexer(simcom,true);
+			Simcom_async(simcom, &token_async);
+		}
+		break;
+	
+	// Verify packet size -- in this new FW the command is not "cipstat" but the state remains with its original name
+	case simcom_state_cipstat:
+		usb_serialPrint("SIMCOM_STATE: CIPSTAT \n");
+		//llenar todo acá
+		break; 
+		
+	case simcom_state_cipclose:
+		usb_serialPrint("SIMCOM_STATE: CIPCLOSE \n");
+		Simcom_request(simcom, "AT+CIPCLOSE=0\r", 5, 20000, 10000);
+		while(1){
+			Token token = Simcom_lexer(simcom,true);
+			if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady))
+			{
+				break;
+			}else if (token.name_ == Token_Name_cipclose)
+			{
+				simcom->networkServerDisconnectionCount_ = 0;
+				simcom->remoteServerDisconnectionCount_ = 1;
+				if (token.array_[1]==0) // cipclose: 0,0 
+				{
+					if (simcom->disconectionFlag_)
+					{
+						Simcom_nextState(simcom, simcom_state_netclose); //netclose
+						string_clear(simcom->tcpTxBuffer_, sizeof(simcom->tcpTxBuffer_));
+					}else{
+						Simcom_nextState(simcom, simcom_state_wait);
+					}
+				}else if (token.array_[1]==4) //net already closed
+				{
+					if (simcom->disconectionFlag_)
+					{
+						Simcom_nextState(simcom, simcom_state_netclose); //netclose
+						string_clear(simcom->tcpTxBuffer_, sizeof(simcom->tcpTxBuffer_));
+					}else {
+						Simcom_nextState(simcom, simcom_state_wait);
+					}
+				}
+				else{
+					Simcom_retry(simcom);
+				}
+			}
+			else if (token.name_ == Token_Name_error)
+			{
+				Simcom_retry(simcom);
+			}
+		}
+		break; 
+	
+	case simcom_state_netclose:
+		usb_serialPrint("SIMCOM_STATE: CIPCLOSE \n");
+		Simcom_request(simcom,"AT+NETCLOSE\r",1,10000,3000);
+		while (1)
+		{
+			Token token = Simcom_lexer(simcom,true);
+			if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady))
+			{
+				break;
+			}else if (token.name_ == Token_Name_netclose)
+			{
+				if (token.array_[0]==0) //netclose: 0
+				{
+					Simcom_nextState(simcom, simcom_state_end); //end
+				}
+				else{
+					Simcom_retry(simcom);
+				}
+			}
+			else if (token.name_ == Token_Name_error)
+			{
+				Simcom_retry(simcom);
+			}
+		}
+		break;
+	
+	case simcom_state_end:
+		usb_serialPrint("SIMCOM_STATE: CIPCLOSE \n");
+		Simcom_reset(simcom);		
 		break;
 	
     default:
@@ -371,18 +725,18 @@ void Simcom_process(Simcom * simcom){
 		simcom->lastRequest_=0;
 	}
 
-	//si el txBuffer_ está vacío y lastRequest existe, actualizar lastReques_ de la simcom
-	if(simcom->txBuffer_[0] == '\0' && !simcom->lastRequest_){
+	//si el txBuffer_ está vacío y lastRequest existe, actualizar lastReques_ de la simcom -> Se envió la solicitud
+	if(simcom->txBuffer_[0] == '\0' && !simcom->lastRequest_){  
 		usb_serialPrint("tXBuffer vacio");
 		simcom->lastRequest_=_calendar_get_counter(&CALENDAR_0.device);
 	}	
-
 }
 
 
 void Simcom_reset(Simcom * simcom){
 	//se hace un clear de tcpTxBuffer y se pasa a state cancel
-	simcom->tcpTxBuffer_[0] = '\0';
+	//simcom->tcpTxBuffer_[0] = '\0';
+	string_clear(simcom->tcpTxBuffer_,1024);
 	Simcom_nextState(simcom,simcom_state_cancel);
 }
 
@@ -432,6 +786,7 @@ void Simcom_request(Simcom * simcom, char * command, unsigned maxAttempt, unsign
 		else {
 			//throw exception(command)
 			usb_serialPrint("ERROR EN SIMCOM_request");
+			Simcom_reset(simcom);
 		}
 	}
 
@@ -454,8 +809,7 @@ void Simcom_processResponse(Simcom * simcom, Simcom_State state){
 		}else if(token.name_ == error){
 			Simcom_retry(simcom); 
 		} else {
-			// ACÁ PENDIENTE SEGUIR CON EL SIMCOM_ASYNC, NO ES TAN LARGO PERO ESTÁ LATERO
-			// Simcom_async(token); 
+			Simcom_async(simcom, &token);  //llena el tcpBuffer que se enviará;
 		}
 	}
 }
@@ -544,7 +898,7 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 				if (strlen(token.value_) == 25)
 				{
 					token.name_ = Token_Name_simei;
-					imei_loadText(&token.imei_,token.value_+8); //acá está el error
+					imei_loadText(&token.imei_,token.value_+8);
 				}else{
 					token.name_ = Token_Name_unknown;
 				}				
@@ -555,7 +909,8 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 			}else if(strncmp(token.value_, ipaddr, strlen(ipaddr)) == 0){
 				token.name_ = Token_Name_ipaddr;
 				offset = sizeof(ipaddr) - 1;
-				nInteger = 1; 
+				simcom->ipaddr_ = token.value_+offset;
+				simcom->ipaddr_[strlen(simcom->ipaddr_)-2]='\0';
 			}else if(strncmp(token.value_, cipopen, strlen(cipopen)) == 0){
 				token.name_ = Token_Name_cipopen;
 				offset = sizeof(cipopen) - 1;

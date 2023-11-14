@@ -17,6 +17,7 @@
 #include <driver_init.h>
 #include <string.h>
 #include <stdio.h>
+#include "myUtils.h"
 
 #include "usb_start.h"
 
@@ -110,8 +111,8 @@ typedef struct {
 } PositionRecord;
 
 typedef struct {
-	char txBuffer_[200]; 
-	char rxBuffer_[200];
+	char txBuffer_[2000]; 
+	char rxBuffer_[2000];
 	
 	Simcom_State state_; 
 	bool otaMode_; 
@@ -146,8 +147,8 @@ typedef struct {
 	
     unsigned positionDelay_;
     bool disconectionFlag_;
-	char * tcpTxBuffer_; 
-	char * tcpRxBuffer_; 
+	char tcpTxBuffer_[1024]; 
+	char tcpRxBuffer_[1024]; 
 	size_t tcpTxBlock_; 
 	
 	Imei imei_; 
@@ -222,6 +223,8 @@ void Simcom_processResponse(Simcom * simcom, Simcom_State state);
 Token Simcom_lexer(Simcom * simcom, bool pull);
 
 void Simcom_nextState(Simcom * simcom, Simcom_State state);
+
+void Simcom_async(Simcom * simcom, Token * token);
 
 void Simcom_retry(Simcom * simcom);
 

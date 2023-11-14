@@ -1178,6 +1178,9 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="myUtils.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Position.c">
       <SubType>compile</SubType>
     </Compile>

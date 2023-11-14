@@ -178,7 +178,7 @@ simcom_driver.d simcom_driver.o: .././simcom_driver.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\_pthreadtypes.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\machine\types.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\stdio.h \
- .././usb_start.h ../usb/class/cdc/device/cdcdf_acm.h \
+ .././myUtils.h .././usb_start.h ../usb/class/cdc/device/cdcdf_acm.h \
  ../usb/device/usbdc.h ../usb/usb_includes.h ../usb/usb_protocol.h \
  ../usb/usb_includes.h ../Config/usbd_config.h \
  ../usb/class/cdc/usb_protocol_cdc.h \
@@ -653,6 +653,8 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\machine\types.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\stdio.h:
+
+.././myUtils.h:
 
 .././usb_start.h:
 

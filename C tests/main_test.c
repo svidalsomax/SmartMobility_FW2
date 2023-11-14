@@ -74,11 +74,15 @@ int main() {
 	simcom.imei_.imei_=token.imei_.imei_;
 
 	printf("simcom.imei_.imei_: %zu \n", simcom.imei_.imei_);
-
-	if(simcom.imei_.imei_){
-		printf("TRUE SIMCOM.IMEI_IMEI_\n");
-	}
 	//strncpy(token_value, simcom.rxBuffer_, 10);
+
+	strcpy(token.value_,"+IPADDR: 10.71.155.158\r\n");
+	printf("token value_: %s", token.value_);
+
+	simcom.ipaddr_ = token.value_ + 9;
+	simcom.ipaddr_[strlen(simcom.ipaddr_)-2]='\0';
+	printf("simcom.ipaddr_: %s", simcom.ipaddr_);
+
 
 /*
 
