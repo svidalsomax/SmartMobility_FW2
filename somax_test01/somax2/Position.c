@@ -55,30 +55,30 @@ void Position_Init_Str(Position * position, char * position_string){
 * \brief Funcion que carga la posición proveniente en cadena de char de la simcom. Toma los campos esperados de la simcom y los transforma a números para guardarlos en los parámetros del objeto.
 */
 int Position_loadRaw(Position * position, char * position_string){
-	char begin_position_string [10];
-	strncpy(begin_position_string, position_string, 10);
-	begin_position_string[10] = '\0';
+	char begin_position_string [11];
+	strncpy(begin_position_string, position_string, 11);
+	begin_position_string[11] = '\0';
 	//printf("%s \n", begin_position_string);
 	//printf("%s \n", position_string);
 
-	if (strcmp(begin_position_string,"+CGPSINFO:") == 0)
+	if (strcmp(begin_position_string,"+CGPSINFO: ") == 0)
 	{
 		//printf("ENTRA CASO 1 \n");
 
 		//get degrees latitude
 		char degrees_str[3];
-		strncpy(degrees_str, position_string+10, 2);
-		degrees_str[2]='\0';
+		strncpy(degrees_str, position_string+11, 2);
+		degrees_str[3]='\0';
 		double degrees = atof(degrees_str);
 
 		//get minutes latitude
 		char minutes_str[9];
-		strncpy(minutes_str, position_string+12, 9);
+		strncpy(minutes_str, position_string+13, 9);
 		minutes_str[9]='\0';
 		double minutes = atof(minutes_str);
 
 		//get hemisphere latitude
-		char hemisphere = position_string[22];
+		char hemisphere = position_string[23];
 
 		//define sign
 		double sign;
@@ -100,17 +100,17 @@ int Position_loadRaw(Position * position, char * position_string){
 		position->latitude_ = sign * (degrees + minutes / 60.);
 
 		//get degrees longitude
-		strncpy(degrees_str, position_string+24, 3);
+		strncpy(degrees_str, position_string+25, 3);
 		degrees_str[3]='\0';
 		degrees = atof(degrees_str);
 
 		//get minutes longitude
-		strncpy(minutes_str, position_string+27, 9);
+		strncpy(minutes_str, position_string+28, 9);
 		minutes_str[9]='\0';
 		minutes = atof(minutes_str);
 
 		//get hemisphere longitud
-		hemisphere = position_string[37];
+		hemisphere = position_string[38];
 
 		if (hemisphere == 'W'){
 			sign = -1;

@@ -127,8 +127,8 @@ typedef struct {
 	
     unsigned positionDelay_;
     bool disconectionFlag_;
-	char * tcpTxBuffer_; 
-	char * tcpRxBuffer_; 
+	char tcpTxBuffer_[1024];
+	char tcpRxBuffer_[1024];
 	size_t tcpTxBlock_; 
 	
 	Imei imei_; 

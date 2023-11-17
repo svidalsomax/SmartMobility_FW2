@@ -471,19 +471,52 @@ int main(void)
 	//ble.tryCounter_ ++; 
 	
 	usb_serialPrint("[VOID SETTING] INITILICE SIMCOM \n");
-	Simcom_struct_init(&simcom); 
-
+	Simcom_struct_init(&simcom); 	
 	
+	//llenar paquete a enviar
+	usb_serialPrint("    [ENCODING TIME]   ");
+	unsigned long long time_ = 1700061550;
+	char encoded_time[5] = {0};
+	encode(time_, 4, encoded_time);
+	encoded_time[4]='\0';
+	
+	usb_serialPrint("     [ENCODING ID IMEI]    ");
+	char id_imei_to_strcat[2];
+	id_imei_to_strcat[0] = (char)(0x40);
+	id_imei_to_strcat[1] = '\0';
+	
+	usb_serialPrint("   [ADDING ID TO TcpTxBuffer_]");
+	strcat(simcom.tcpTxBuffer_, id_imei_to_strcat);
+	
+	usb_serialPrint("   [ADDING TIME TO TcpTxBuffer_]");
+	strcat(simcom.tcpTxBuffer_, encoded_time);
+	
+	int encode_imei = 0;
+	
+		
 	while (1) {
 		if (errorcnt == 0)
 		{ 
 			gpio_set_pin_level(LED0, false);
 			gpio_set_pin_level(LED1, false);
 			gpio_set_pin_level(LED2, false);
-			//usb_read_routine();		
+			usb_read_routine();		
 			
 			
 			usb_serialPrint("\n ----------- WHILE 1 ----------- \n");
+			
+			if (simcom.imei_.imei_!=0 && encode_imei == 0)
+			{
+					usb_serialPrint("     [ENCODING IMEI]    ");
+					char encodedImei[8];
+					imei_binary(&simcom.imei_, encodedImei);
+					encodedImei[7]='\0';
+
+					usb_serialPrint("   [ADDING TIME TO TcpTxBuffer_]");
+					strcat(simcom.tcpTxBuffer_, encoded_time);
+					encode_imei = 1;
+			}
+			
 			
 			//ble_process(&ble);
 			Simcom_process(&simcom);  	

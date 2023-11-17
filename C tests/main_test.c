@@ -7,10 +7,12 @@
 
 #include "main_test.h"
 #include "ble.h"
+//#include "Binary.h"
 #include "imei.h"
 //#include "Binary.h"
 #include "Position.h"
 #include "simcom_driver.h"
+
 
 Ble ble = {0}; 
 Imei imei ={0}; 
@@ -33,6 +35,8 @@ int main() {
 	/*
 	 * SIMCOM TEST
 	*/
+
+/*
     const char buffer[] = "115,345,2123,4";
     int integers[10];
     int count;
@@ -84,7 +88,7 @@ int main() {
 	printf("simcom.ipaddr_: %s", simcom.ipaddr_);
 
 
-/*
+
 
 	printf("token value es: %s \n", token_value);
 	printf("token value strlen: %d \n", strlen(token_value));
@@ -111,7 +115,7 @@ int main() {
 			//printf("substr NULL?: %s", substr);
 		}		
 	}
-*/
+
 	//printf("index: %zu \n", index);
 
 	//char token_value[100];
@@ -139,7 +143,7 @@ int main() {
 
 	erase_string(start, length, str);
  	//printf("%s\n", str);
-/*
+
     if (start >= 0 && start < str_length && length > 0) {
         for (int i = start; i < str_length - length; i++) {
             str[i] = str[i + length];
@@ -148,10 +152,10 @@ int main() {
     }
 
     printf("%s\n", str); // Imprimirá "Hello, "
-*/ 
 
 
-	/*
+
+
 
 	size_t length = atoi(s1+5);
 	printf("length size_t s1+5: %zu \n", length);
@@ -180,64 +184,143 @@ int main() {
 	 * IMEI TEST
 	 */
 
+	char encoded_message[1024]={0};
+
+	printf("    [ENCODE TIME]    ");
+
+	unsigned long time_ = 1700061550;
+	char encoded_time[5];
+	encode(time_, 4, encoded_time);
+	encoded_time[4]='\0';
+
+	printf("\n encoded time HEX:");
+	for (int i = 3; i >= 0; i--) {
+		//printBinary(encodedString[i]);
+        printf("%02X ", (unsigned char)encoded_time[i]);
+    }
 /*
-	printf("Imei: %llu", imei.imei_);
+	printf("\n encoded time BIN:");
+	for (int i = 3; i >= 0; i--) {
+		printBinary(encoded_time[i]);
+        //printf("%02X ", (unsigned char)encoded_time[i]);
+    }
+*/
+	printf(" \n      [ENCODE IMEI]");
+	char id_imei_to_strcat[2];
+	id_imei_to_strcat[0] = (char)(0x40);
+	id_imei_to_strcat[1] = '\0';
+
+	strcat(encoded_message, id_imei_to_strcat);  //ID identify
+	strcat(encoded_message, encoded_time);  // Time encoded
+
+	printf("Imei: %llu \n", imei.imei_);
 	
 	imei_init(&imei, "865553060836667"); 
 
 	printf("Imei: %llu \n", imei.imei_);
 
-	char encodedString[sizeof(imei.imei_)];
+	char encodedImei[8];
 
-	imei_binary(&imei, encodedString);
+	imei_binary(&imei, encodedImei);
+	encodedImei[7]='\0';
 
+	strcat(encoded_message, encodedImei);
+	printf("\nencodede message hexa: %c \n", encoded_message[0]);
+
+/*
 	Imei imei2 = {0}; 
 	imei_init(&imei2, "123456789876234");
 
 	printf("Imeis are equal? %s\n", imei_is_equal(&imei, &imei2) ? "true" : "false"); 
 	printf("Imeis are not equal? %s\n", imei_is_not_equal(&imei, &imei2) ? "true" : "false"); 
 
-	for (int i = 0; i < 7; i++) {
-		printBinary(encodedString[i]);
+	for (int i = 6; i >= 0; i--) {
+		printBinary(encodedImei[i]);
         //printf("%02X ", (unsigned char)encodedString[i]);
     }
+*/ 
 
 	printf("\n");
-	for (int i = 0; i < 7; i++) {
+	for (int i = 6; i >= 0; i--) {
 		//printBinary(encodedString[i]);
-        printf("%02X ", (unsigned char)encodedString[i]);
+        printf("%02X ", (unsigned char)encodedImei[i]);
+    }
+/*
+	printf("\n");
+	for (int i =0; i < 7; i++) {
+		//printBinary(encodedString[i]);
+        printf("%02X ", (unsigned char)encodedImei[i]);
     }
 */
+
+
 
 	/*
 	 * POSITION TEST
 	 */
 
-	/*	
+	
+	printf(" \n[POSITION SECTION]");
+
 	Position_Init_Default(&overflow);
 	Position_Init_Default(&position);
 
-	char *gpsinfo;
-	strcpy(gpsinfo,"+CGPSINFO:3113.343286,N,12121.234064,E,250311,072809.3,44.1,0.0,0");
+	char gpsinfo[sizeof("+CGPSINFO: 3113.343286,N,12121.234064,E,250311,072809.3,44.1,0.0,0")];
+	
+	strcpy(gpsinfo,"+CGPSINFO: 3113.343286,N,12121.234064,E,250311,072809.3,44.1,0.0,0");
+ 
 	Position_Init_Str(&position, gpsinfo); 
 
 	printf("%f \n", position.latitude_);
 	printf("%f \n", position.longitude_);
 
-	char position_encoded[6];
+	char position_encoded[7];
 
 	binary_position(&position, position_encoded); 
 
 	for (int i = 0; i < 7; i++) {
 		//printBinary(encodedString[i]);
-        printf("%02X", (unsigned char)position_encoded[i]);
+        printf("%02X ", (unsigned char)position_encoded[i]);
     }
+
+	printf("Arreglo contado para atrss:");
+	for (int i = 6; i >= 0; i--) {
+		//printBinary(encodedString[i]);
+        printf("%02X ", (unsigned char)position_encoded[i]);
+    }
+
 	printf("\n");
 
 	for (int i = 0; i < 7; i++) {
 		printBinary(position_encoded[i]);
     }	
-*/ 
+
+	printf("\n");
+
+	printf("PRINT POSITION string: %s\n", position_encoded);
+	printf("PRINT POSITION HEXA: %02X\n", position_encoded);
+
+
+
+
+
+
+
+
+
+	printf("  [TCP TX BUFFER TEST]   \n");
+	char packet_to_send[1024];
+	char cuarenta = (char)(0x40);
+	printf("curante %c: \n", cuarenta);
+	strcat(packet_to_send, &cuarenta);
+	packet_to_send[1]='\0';
+	printf("static cast a 0x40: %s \n", packet_to_send);
+
+	char cincuenta = 50;
+	printf("cincuenta: %c\n", cincuenta);
+
+
+	
     while(1){
 		//ble_process(&ble);
 		//printf("%d",ble.state_);

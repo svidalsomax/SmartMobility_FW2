@@ -98,8 +98,8 @@ typedef enum {
 
 typedef struct {
 	Token_Name name_;
-	char value_[100] ;
-	char message_ [100];
+	char value_[200] ;
+	char message_ [200];
 	int array_[3];
 	Imei imei_;
 	Position position_;

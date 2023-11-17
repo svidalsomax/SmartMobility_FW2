@@ -60,7 +60,7 @@ void simcom_send_and_receive(char* command, char* response)
 	io_write(simcom_io, (uint8_t *)at_cmd, strlen(at_cmd));
 	delay_ms(100);
 	io_read(simcom_io, response, 1024);  //1024 era el max length
-	delay_ms(100); // se añadieron 3 time to delay para ver si eso era el problema de tener la respuesta completa.
+	delay_ms(100); 
 }
 
 void simcom_receive(char* response)
@@ -141,8 +141,13 @@ void Simcom_struct_init(Simcom * simcom ){
 	simcom->tDataRxSize_ = 0;
 	simcom->tDataTxSize_ = 0;
 	
+	//iniciar imei en 0
+	//simcom->imei_.imei_=0;
+	
 	//limpiar arreglos con tamaño definido
 	string_clear(simcom->tcpTxBuffer_,1024);
+	//simcom->rxBuffer_[sizeof(simcom->rxBuffer_) - 1] = '\0';
+	//string_clear(simcom->rxBuffer_,2000);
 }
 
 void Simcom_setStartDelay(Simcom * simcom, unsigned long startDelay){
@@ -230,7 +235,7 @@ void Simcom_clearOtaMode(Simcom * simcom){
 }
 
 void Simcom_process(Simcom * simcom){
-    char buffer[1024] = {0};
+    char buffer[1024]={0};
 	simcom_receive(buffer);
 	strcat(simcom->rxBuffer_ , buffer);
 
@@ -353,7 +358,7 @@ void Simcom_process(Simcom * simcom){
 	// Set PDP context username and password
 	case simcom_state_cgauth:
 		usb_serialPrint("SIMCOM_STATE: CGAUTH\n");
-		Simcom_request(simcom, "AT+CGAUTH=1,1,\" \", \" \"\r", 5, 3000, 1000); //no hay usuario ni pass, pero debe quedar en espacio
+		Simcom_request(simcom, "AT+CGAUTH=1,1,\" \",\" \"\r", 5, 3000, 1000); //no hay usuario ni pass, pero debe quedar en espacio
 		Simcom_processResponse(simcom, simcom_state_ciptimeout);
 		break;
 	
@@ -464,18 +469,19 @@ void Simcom_process(Simcom * simcom){
 		usb_serialPrint("SIMCOM_STATE: CIPOPEN\n");
 		if (Simcom_timer(simcom))
 		{
-			Simcom_request(simcom, "AT+CIPOPEN:0,\"TCP\",\"190.3.169.116\",\"56731\"\r", 5, 500+simcom->openTimeout_, 500);
+			Simcom_request(simcom, "AT+CIPOPEN=0,\"TCP\",\"190.3.169.116\",56731\r", 5, 500+simcom->openTimeout_, 500);
 			while(1){
 				Token token = Simcom_lexer(simcom, true);
 				if ((token.name_ == Token_Name_empty) || (token.name_ == Token_Name_notReady)){
 					break;
 				} else if (token.name_ == Token_Name_cipopen)
 				{
-					if (simcom->disconectionFlag_ && (simcom->tcpTxBuffer_[0]!='\0'))
+					usb_serialPrint("token CIPOPEN bien hecho\n");
+					if (simcom->disconectionFlag_ && (simcom->tcpTxBuffer_[0]!='\0'))  //si se desconectó pero falta info que mandar
 					{
 						if (token.array_[1]==0)
 						{
-							string_clear(simcom->tcpTxBuffer_,sizeof(simcom->tcpTxBuffer_));
+							string_clear(simcom->tcpRxBuffer_,sizeof(simcom->tcpRxBuffer_));
 							Simcom_setTimer(simcom,120000);
 							Simcom_nextState(simcom,simcom_state_cipstat);
 						}
@@ -484,7 +490,7 @@ void Simcom_process(Simcom * simcom){
 					{
 						if (token.array_[1]==0){
 							simcom->connection_ ++;
-							string_clear(simcom->tcpTxBuffer_, sizeof(simcom->tcpTxBuffer_));
+							string_clear(simcom->tcpRxBuffer_, sizeof(simcom->tcpRxBuffer_));
 							Simcom_setTimer(simcom,5000);
 							Simcom_nextState(simcom,simcom_state_cipsend0);
 						}else if (token.array_[1]>0)
@@ -528,7 +534,7 @@ void Simcom_process(Simcom * simcom){
 			
 			char command_buffer[] = "AT+CIPSEND=0,";
 			char tcpTXblock_string [20];
-		    sprintf(tcpTXblock_string, "%zu", simcom->tcpTxBlock_);
+		    sprintf(tcpTXblock_string, "%zu", simcom->tcpTxBlock_); //acá puede que haya un error
 			strcat(command_buffer,tcpTXblock_string);
 			strcat(command_buffer,"\r");
 			Simcom_request(simcom, command_buffer, 5, 1000, 100);
@@ -832,8 +838,10 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 	}
 	else
 	{
-		char rn[2]="\r\n";
-		char *rn_pointer = strstr(simcom->rxBuffer_, rn); //puntero a donde se encuentr \r\n en rxBuffer_
+		//char rn[2]="\r\n";
+		//char rn = "\n" ;
+		//simcom->rxBuffer_[sizeof(simcom->rxBuffer_)-1]='\0';
+		char * rn_pointer = strstr(simcom->rxBuffer_, blank); //puntero a donde se encuentra \r\n en rxBuffer_		
 		usb_serialPrint("simcom_lexer | substr:"); 
 		usb_serialPrint(rn_pointer);
 		//usb_serialPrint("\n");
@@ -852,10 +860,7 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 		{
 			usb_serialPrint("simcom_lexer | substr else != NULL");
 			usb_serialPrint("\n");
-			size_t index = rn_pointer - simcom->rxBuffer_; //calcular el indice de donde esta \r\n restando posiciones de memoria
-			
-			//744 de simcom cpp:
-			
+			size_t index = rn_pointer - simcom->rxBuffer_; //calcular el indice de donde esta \r\n restando posiciones de memoria			
 			strncpy(token.value_,simcom->rxBuffer_,index + 2); //index + 2 es el largo de la subcadena del  rxbuffer que se copará a token.value_.
 			token.value_[index+2+1] = '\0';
 			
@@ -912,6 +917,7 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 				simcom->ipaddr_ = token.value_+offset;
 				simcom->ipaddr_[strlen(simcom->ipaddr_)-2]='\0';
 			}else if(strncmp(token.value_, cipopen, strlen(cipopen)) == 0){
+				usb_serialPrint("TOKEN VALUE CIPOPEN\n");
 				token.name_ = Token_Name_cipopen;
 				offset = sizeof(cipopen) - 1;
 				nInteger = 2;				
@@ -978,7 +984,9 @@ Token Simcom_lexer(Simcom * simcom, bool pull){
 				int vector[index];
 				int count;
 				char buffer[index-offset]; 
-				strncpy(buffer, token.value_ + offset, index-offset);
+				size_t length = index - offset;
+				//strncpy(buffer, token.value_ + offset, index-offset);
+				memcpy(buffer, token.value_ + offset, length);
 				getIntegers(buffer, vector, &count);
 				
 				if (count == nInteger)
